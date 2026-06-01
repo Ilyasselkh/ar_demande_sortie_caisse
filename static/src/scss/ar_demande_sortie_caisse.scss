@@ -10,15 +10,40 @@
     --ar-sc-blue: #2563eb;
     --ar-sc-amber: #b45309;
     --ar-sc-red: #b42318;
+    --ar-primary: #0072bc;
+    --ar-primary-dark: #004f85;
+    --ar-muted: #667085;
+    --ar-border: #d9e2ec;
 
     background:
         linear-gradient(180deg, #f3f8fb 0%, #f7f9fc 36%, #ffffff 100%);
 
     .o_form_statusbar {
+        border-bottom: 1px solid var(--ar-border);
+        background: linear-gradient(90deg, #ffffff 0%, #f4f8fb 100%);
         padding: 10px 16px;
-        border-bottom: 1px solid #dce5ef;
-        background: #ffffff;
-        box-shadow: 0 8px 18px rgba(23, 32, 51, 0.04);
+    }
+
+    .o_statusbar_status {
+        gap: 6px;
+    }
+
+    .o_arrow_button {
+        border-radius: 999px !important;
+        border: 1px solid var(--ar-border) !important;
+        background: #fff !important;
+        color: var(--ar-muted) !important;
+        margin-inline: 2px;
+        padding-inline: 13px !important;
+        font-weight: 600;
+    }
+
+    .o_arrow_button_current,
+    .o_arrow_button.o_arrow_button_current {
+        background: linear-gradient(135deg, var(--ar-primary), var(--ar-primary-dark)) !important;
+        border-color: transparent !important;
+        color: #fff !important;
+        box-shadow: 0 8px 18px rgba(0, 114, 188, 0.25);
     }
 
     .ar_sortie_caisse_sheet {
@@ -563,18 +588,6 @@
         border-color: #cdd9e5;
         background: #ffffff;
         font-weight: 700;
-    }
-
-    .o_statusbar_status .o_arrow_button_current {
-        background-color: var(--ar-sc-teal);
-        border-color: var(--ar-sc-teal);
-        color: #ffffff;
-        font-weight: 800;
-    }
-
-    .o_statusbar_status .o_arrow_button:not(.o_arrow_button_current) {
-        color: #4b5870;
-        background: #f4f7fb;
     }
 
     .btn-success {
