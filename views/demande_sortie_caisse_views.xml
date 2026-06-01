@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sortie_caisse_action_wizard_form" model="ir.ui.view">
+        <field name="name">ar.demande.sortie.caisse.action.wizard.form</field>
+        <field name="model">ar.demande.sortie.caisse.action.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirmation" class="ar_sc_decision_wizard">
+                <field name="demande_id" invisible="1"/>
+                <field name="action_type" invisible="1"/>
+
+                <div class="ar_sc_wizard_message" invisible="action_type != 'modify'">
+                    <div class="ar_sc_wizard_icon ar_sc_wizard_icon_modify">MOD</div>
+                    <h2>Confirmer la modification</h2>
+                    <p>Voulez-vous remettre cette demande à l’état Expression de besoin ?</p>
+                </div>
+
+                <div class="ar_sc_wizard_message" invisible="action_type not in ['validate_n1', 'validate_tresorerie', 'validate_fi', 'validate_md']">
+                    <div class="ar_sc_wizard_icon ar_sc_wizard_icon_validate">OK</div>
+                    <h2>Confirmer la validation</h2>
+                    <p>Voulez-vous vraiment valider cette demande ?</p>
+                </div>
+
+                <div class="ar_sc_wizard_message" invisible="action_type != 'refuse'">
+                    <div class="ar_sc_wizard_icon ar_sc_wizard_icon_refuse">!</div>
+                    <h2>Confirmer le refus</h2>
+                    <p>Voulez-vous vraiment refuser cette demande ?</p>
+                </div>
+
+                <footer>
+                    <button name="action_confirm"
+                            string="Confirmer"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Annuler"
+                            special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ar_demande_sortie_caisse_list" model="ir.ui.view">
+        <field name="name">ar.demande.sortie.caisse.list</field>
+        <field name="model">ar.demande.sortie.caisse</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'acceptee'"
+                  decoration-danger="state == 'refusee'"
+                  decoration-info="state in ('validation_n1', 'tresorerie', 'validation_fi', 'validation_md')"
+                  decoration-muted="state == 'expression_besoin'">
+                <field name="name"/>
+                <field name="state" widget="badge"/>
+                <field name="demandeur_id"/>
+                <field name="manager_n1_id"/>
+                <field name="department_id"/>
+                <field name="date_demande"/>
+                <field name="montant_demande_display"/>
+                <field name="total_prix_display"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ar_demande_sortie_caisse_kanban" model="ir.ui.view">
+        <field name="name">ar.demande.sortie.caisse.kanban</field>
+        <field name="model">ar.demande.sortie.caisse</field>
+        <field name="arch" type="xml">
+            <kanban class="ar_demande_sortie_caisse_kanban" default_group_by="state" quick_create="false">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="demandeur_id"/>
+                <field name="manager_n1_id"/>
+                <field name="department_id"/>
+                <field name="date_demande"/>
+                <field name="montant_demande_display"/>
+                <templates>
+                    <t t-name="card">
+                        <div t-attf-class="oe_kanban_global_click oe_kanban_card ar_request_card ar_state_#{record.state.raw_value}">
+                            <div class="ar_card_topline"/>
+                            <div class="ar_card_header">
+                                <div>
+                                    <span class="ar_card_ref"><field name="name"/></span>
+                                    <strong class="ar_card_title">Demande sortie caisse</strong>
+                                </div>
+                                <span class="ar_card_state"><field name="state"/></span>
+                            </div>
+                            <div class="ar_card_person">
+                                <span class="ar_card_avatar"><i class="fa fa-user"/></span>
+                                <div>
+                                    <span class="ar_card_label">Collaborateur</span>
+                                    <strong><field name="demandeur_id"/></strong>
+                                </div>
+                            </div>
+                            <div class="ar_card_meta">
+                                <span><i class="fa fa-sitemap"/> <field name="department_id"/></span>
+                                <span><i class="fa fa-check-circle"/> <field name="manager_n1_id"/></span>
+                            </div>
+                            <div class="ar_card_dates">
+                                <span><i class="fa fa-calendar-o"/> <field name="date_demande"/></span>
+                                <span><i class="fa fa-money"/> <field name="montant_demande_display"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_ar_demande_sortie_caisse_form" model="ir.ui.view">
+        <field name="name">ar.demande.sortie.caisse.form</field>
+        <field name="model">ar.demande.sortie.caisse</field>
+        <field name="arch" type="xml">
+            <form string="Demande sortie caisse" class="ar_sortie_caisse_form">
+                <header>
+                    <button name="action_soumettre"
+                            string="Soumettre"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'expression_besoin' or not can_edit_demande"/>
+                    <button name="action_open_validate_n1_wizard"
+                            string="Valider N+1"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_validate_n1"/>
+                    <button name="action_open_validate_tresorerie_wizard"
+                            string="Valider Trésorerie"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_validate_tresorerie"/>
+                    <button name="action_open_validate_fi_wizard"
+                            string="Valider FI"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_validate_fi"/>
+                    <button name="action_open_validate_md_wizard"
+                            string="Valider MD"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_validate_md"/>
+                    <button name="action_open_refuse_wizard"
+                            string="Refuser"
+                            type="object"
+                            class="btn-danger"
+                            invisible="not can_refuse"/>
+                    <button name="action_open_modify_wizard"
+                            string="Modifier"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="not can_modify or state in ['acceptee', 'refusee']"/>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="expression_besoin,validation_n1,tresorerie,validation_fi,validation_md,acceptee,refusee"/>
+                </header>
+                <sheet class="ar_sortie_caisse_sheet" style="max-width: none; width: calc(100% - 32px);">
+                    <field name="can_validate_n1" invisible="1"/>
+                    <field name="can_validate_tresorerie" invisible="1"/>
+                    <field name="can_validate_fi" invisible="1"/>
+                    <field name="can_validate_md" invisible="1"/>
+                    <field name="can_refuse" invisible="1"/>
+                    <field name="can_modify" invisible="1"/>
+                    <field name="can_edit_demande" invisible="1"/>
+                    <field name="demandeur_user_id" invisible="1"/>
+
+                    <div class="ar_sortie_caisse_title">
+                        <div>
+                            <span class="ar_sortie_caisse_label">Demande sortie caisse</span>
+                            <h1>
+                                <field name="name" readonly="1" nolabel="1"/>
+                            </h1>
+                            <div class="ar_sc_static_3d" aria-hidden="true">
+                                <span class="ar_sc_3d_card ar_sc_3d_card_main"/>
+                                <span class="ar_sc_3d_card ar_sc_3d_card_back"/>
+                                <span class="ar_sc_3d_card ar_sc_3d_card_front"/>
+                                <span class="ar_sc_3d_coin ar_sc_3d_coin_one"/>
+                                <span class="ar_sc_3d_coin ar_sc_3d_coin_two"/>
+                                <span class="ar_sc_3d_coin ar_sc_3d_coin_three"/>
+                            </div>
+                        </div>
+                        <div class="ar_sortie_caisse_amount">
+                            <span>Montant demandé</span>
+                            <field name="montant_demande_display"
+                                   nolabel="1"
+                                   readonly="1"/>
+                        </div>
+                    </div>
+
+                    <div class="ar_sortie_caisse_main_row">
+                        <group class="ar_sortie_caisse_panel ar_sortie_caisse_identity">
+                            <group string="Informations demandeur">
+                                <field name="demandeur_id" readonly="1"/>
+                                <field name="manager_n1_id" readonly="1"/>
+                                <field name="department_id" readonly="1"/>
+                                <field name="date_demande" readonly="1"/>
+                            </group>
+                            <group string="Décision" invisible="not can_refuse and not motif_refus">
+                                <field name="motif_refus"
+                                       invisible="not can_refuse and not motif_refus"
+                                       readonly="not can_refuse"/>
+                            </group>
+                        </group>
+
+                        <group class="ar_sortie_caisse_panel ar_sortie_caisse_description">
+                            <field name="description_demande"
+                                   placeholder="Description de la demande"
+                                   readonly="not can_edit_demande"
+                                   required="1"/>
+                            <field name="attachment_ids"
+                                   widget="many2many_binary"
+                                   readonly="not can_edit_demande"/>
+                        </group>
+                    </div>
+
+                    <group class="ar_sortie_caisse_panel ar_sortie_caisse_lines" col="4">
+                        <separator string="Expression de besoin" colspan="4"/>
+                        <field name="line_ids"
+                               nolabel="1"
+                               colspan="4"
+                               readonly="not can_edit_demande">
+                            <list editable="bottom">
+                                <field name="commande" required="1"/>
+                                <field name="quantite" required="1"/>
+                                <field name="prix" required="1"/>
+                            </list>
+                        </field>
+                        <field name="total_prix_display" colspan="4" readonly="1"/>
+                    </group>
+
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ar_demande_sortie_caisse_search" model="ir.ui.view">
+        <field name="name">ar.demande.sortie.caisse.search</field>
+        <field name="model">ar.demande.sortie.caisse</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="demandeur_id"/>
+                <field name="manager_n1_id"/>
+                <field name="department_id"/>
+                <field name="state"/>
+                <filter string="Expression de besoin" name="filter_expression" domain="[('state','=','expression_besoin')]"/>
+                <filter string="Validation N+1" name="filter_n1" domain="[('state','=','validation_n1')]"/>
+                <filter string="Trésorerie" name="filter_tresorerie" domain="[('state','=','tresorerie')]"/>
+                <filter string="Validation FI" name="filter_fi" domain="[('state','=','validation_fi')]"/>
+                <filter string="Validation MD" name="filter_md" domain="[('state','=','validation_md')]"/>
+                <filter string="Acceptée" name="filter_acceptee" domain="[('state','=','acceptee')]"/>
+                <filter string="Refusée" name="filter_refusee" domain="[('state','=','refusee')]"/>
+                <group>
+                    <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Département" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Demandeur" name="group_demandeur" context="{'group_by': 'demandeur_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sortie_caisse_demandes" model="ir.actions.act_window">
+        <field name="name">Demandes</field>
+        <field name="res_model">ar.demande.sortie.caisse</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_ar_demande_sortie_caisse_search"/>
+        <field name="domain">[('state','not in',('acceptee','refusee'))]</field>
+        <field name="context">{'form_view_initial_mode': 'edit'}</field>
+    </record>
+
+    <record id="action_sortie_caisse_archive_acceptee" model="ir.actions.act_window">
+        <field name="name">Demandes Acceptées</field>
+        <field name="res_model">ar.demande.sortie.caisse</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_ar_demande_sortie_caisse_search"/>
+        <field name="domain">[('state','=','acceptee')]</field>
+    </record>
+
+    <record id="action_sortie_caisse_archive_refusee" model="ir.actions.act_window">
+        <field name="name">Demandes Refusées</field>
+        <field name="res_model">ar.demande.sortie.caisse</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_ar_demande_sortie_caisse_search"/>
+        <field name="domain">[('state','=','refusee')]</field>
+    </record>
+</odoo>

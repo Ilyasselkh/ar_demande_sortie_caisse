@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_ar_demande_sortie_caisse" model="ir.sequence">
+        <field name="name">Demande Sortie Caisse</field>
+        <field name="code">ar.demande.sortie.caisse</field>
+        <field name="prefix">FI-SC-</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_ar_demande_sortie_caisse" model="ir.module.category">
+        <field name="name">Demande Sortie Caisse</field>
+        <field name="description">Droits d'accès du module sortie caisse</field>
+        <field name="sequence">36</field>
+    </record>
+
+    <record id="groups_privilege_sortie_caisse_user" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Demandeur</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">10</field>
+    </record>
+    <record id="groups_privilege_sortie_caisse_validateur_n1" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Validateur N+1</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">20</field>
+    </record>
+    <record id="groups_privilege_sortie_caisse_validateur_fi" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Validateur FI</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">30</field>
+    </record>
+    <record id="groups_privilege_sortie_caisse_tresorerie" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Trésorerie</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">25</field>
+    </record>
+    <record id="groups_privilege_sortie_caisse_validateur_md" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Validateur MD</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">40</field>
+    </record>
+    <record id="groups_privilege_sortie_caisse_param" model="res.groups.privilege">
+        <field name="name">Sortie Caisse - Paramétrage</field>
+        <field name="category_id" ref="ar_demande_sortie_caisse.module_category_ar_demande_sortie_caisse"/>
+        <field name="sequence">50</field>
+    </record>
+
+    <record id="group_demande_sortie_caisse_user" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_user"/>
+    </record>
+    <record id="group_demande_sortie_caisse_validateur_n1" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_validateur_n1"/>
+    </record>
+    <record id="group_demande_sortie_caisse_validateur_fi" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_validateur_fi"/>
+    </record>
+    <record id="group_demande_sortie_caisse_tresorerie" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_tresorerie"/>
+    </record>
+    <record id="group_demande_sortie_caisse_validateur_md" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_validateur_md"/>
+    </record>
+    <record id="group_demande_sortie_caisse_param" model="res.groups">
+        <field name="name">Actif</field>
+        <field name="privilege_id" ref="ar_demande_sortie_caisse.groups_privilege_sortie_caisse_param"/>
+    </record>
+</odoo>

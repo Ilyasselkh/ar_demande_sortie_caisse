@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_sortie_caisse_demandeur" model="ir.rule">
+        <field name="name">Sortie Caisse - Demandeur</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[('demandeur_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_user'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_manager_n1" model="ir.rule">
+        <field name="name">Sortie Caisse - Manager N+1</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[('manager_n1_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_n1'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_fi" model="ir.rule">
+        <field name="name">Sortie Caisse - Validateur FI</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[('validateur_fi_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_fi'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_tresorerie" model="ir.rule">
+        <field name="name">Sortie Caisse - Trésorerie</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[('tresorier_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_md" model="ir.rule">
+        <field name="name">Sortie Caisse - MD voit tout</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[('validateur_md_prevu_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_md'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_param" model="ir.rule">
+        <field name="name">Sortie Caisse - Paramétrage voit tout</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_param'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_demandeur" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - Demandeur</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[('demande_id.demandeur_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_user'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_manager_n1" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - Manager N+1</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[('demande_id.manager_n1_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_n1'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_fi" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - Validateur FI</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[('demande_id.validateur_fi_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_fi'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_tresorerie" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - Trésorerie</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[('demande_id.tresorier_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_md" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - MD voit tout</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[('demande_id.validateur_md_prevu_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_md'))]"/>
+    </record>
+
+    <record id="rule_sortie_caisse_line_param" model="ir.rule">
+        <field name="name">Sortie Caisse Lignes - Paramétrage voit tout</field>
+        <field name="model_id" ref="model_ar_demande_sortie_caisse_line"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('ar_demande_sortie_caisse.group_demande_sortie_caisse_param'))]"/>
+    </record>
+</odoo>

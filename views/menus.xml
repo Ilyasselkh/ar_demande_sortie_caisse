@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_sortie_caisse_root"
+              name="AR Demande de Sortie Caisse"
+              sequence="11"
+              groups="ar_demande_sortie_caisse.group_demande_sortie_caisse_user,ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_n1,ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie,ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_fi,ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_md,ar_demande_sortie_caisse.group_demande_sortie_caisse_param"/>
+
+    <menuitem id="menu_sortie_caisse_demandes"
+              name="Demandes"
+              parent="menu_sortie_caisse_root"
+              action="action_sortie_caisse_demandes"
+              sequence="10"/>
+
+    <menuitem id="menu_sortie_caisse_archives"
+              name="Archives"
+              parent="menu_sortie_caisse_root"
+              sequence="20"/>
+
+    <menuitem id="menu_sortie_caisse_archive_acceptee"
+              name="Acceptée"
+              parent="menu_sortie_caisse_archives"
+              action="action_sortie_caisse_archive_acceptee"
+              sequence="1"/>
+
+    <menuitem id="menu_sortie_caisse_archive_refusee"
+              name="Refusée"
+              parent="menu_sortie_caisse_archives"
+              action="action_sortie_caisse_archive_refusee"
+              sequence="2"/>
+
+    <menuitem id="menu_sortie_caisse_documentation"
+              name="Documentation"
+              parent="menu_sortie_caisse_root"
+              action="action_sortie_caisse_documentation"
+              sequence="30"/>
+
+    <menuitem id="menu_sortie_caisse_parametrage"
+              name="Paramétrage"
+              parent="menu_sortie_caisse_root"
+              action="action_sortie_caisse_regle_validation"
+              sequence="40"
+              groups="ar_demande_sortie_caisse.group_demande_sortie_caisse_param"/>
+</odoo>
