@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_demande_sortie_caisse" model="ir.actions.report">
+        <field name="name">Demande de sortie de caisse</field>
+        <field name="model">ar.demande.sortie.caisse</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ar_demande_sortie_caisse.report_demande_sortie_caisse_document</field>
+        <field name="report_file">ar_demande_sortie_caisse.report_demande_sortie_caisse_document</field>
+        <field name="paperformat_id" ref="ar_recrutement.paperformat_candidate_appreciation"/>
+        <field name="print_report_name">'Demande de sortie de caisse - %s' % (object.name or '')</field>
+        <field name="binding_model_id" ref="model_ar_demande_sortie_caisse"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_demande_sortie_caisse_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="ar_recrutement.report_araymond_external_layout">
+                    <div class="page">
+                        <style>
+                            .ar_report_title {
+                                color: #0f172a;
+                                font-size: 24px;
+                                font-weight: 800;
+                                margin-bottom: 18px;
+                                text-align: center;
+                                text-transform: uppercase;
+                            }
+                            .ar_report_ref {
+                                background: #eef8f6;
+                                border: 1px solid #9ed3cd;
+                                border-radius: 6px;
+                                color: #115e59;
+                                display: inline-block;
+                                font-weight: 800;
+                                margin-bottom: 18px;
+                                padding: 7px 12px;
+                            }
+                            .ar_report_section {
+                                border: 1px solid #d8e0ea;
+                                border-radius: 6px;
+                                margin-bottom: 16px;
+                                padding: 14px 16px;
+                            }
+                            .ar_report_section h3 {
+                                border-bottom: 1px solid #e7edf4;
+                                color: #172033;
+                                font-size: 14px;
+                                font-weight: 800;
+                                margin: 0 0 12px;
+                                padding-bottom: 8px;
+                                text-transform: uppercase;
+                            }
+                            .ar_report_grid {
+                                display: table;
+                                width: 100%;
+                            }
+                            .ar_report_row {
+                                display: table-row;
+                            }
+                            .ar_report_label,
+                            .ar_report_value {
+                                display: table-cell;
+                                padding: 5px 0;
+                                vertical-align: top;
+                            }
+                            .ar_report_label {
+                                color: #697386;
+                                font-weight: 700;
+                                width: 160px;
+                            }
+                            .ar_report_table {
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+                            .ar_report_table th {
+                                background: #eef3f8;
+                                border: 1px solid #cfdce8;
+                                color: #172033;
+                                font-weight: 800;
+                                padding: 8px;
+                                text-align: left;
+                            }
+                            .ar_report_table td {
+                                border: 1px solid #d8e0ea;
+                                padding: 8px;
+                            }
+                            .ar_report_num {
+                                text-align: right;
+                                white-space: nowrap;
+                            }
+                            .ar_report_total {
+                                background: #eef8f6;
+                                border: 1px solid #9ed3cd;
+                                border-radius: 6px;
+                                color: #115e59;
+                                font-size: 15px;
+                                font-weight: 900;
+                                margin-top: 12px;
+                                padding: 10px 12px;
+                                text-align: right;
+                            }
+                        </style>
+
+                        <h1 class="ar_report_title">DEMANDE DE SORTIE DE CAISSE</h1>
+                        <div class="ar_report_ref">
+                            Reference :
+                            <span t-field="o.name"/>
+                        </div>
+
+                        <div class="ar_report_section">
+                            <h3>Informations demandeur</h3>
+                            <div class="ar_report_grid">
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Demandeur</div>
+                                    <div class="ar_report_value"><span t-field="o.demandeur_id"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Manager N+1</div>
+                                    <div class="ar_report_value"><span t-field="o.manager_n1_id"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Departement</div>
+                                    <div class="ar_report_value"><span t-field="o.department_id"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Date</div>
+                                    <div class="ar_report_value"><span t-field="o.date_demande"/></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ar_report_section">
+                            <h3>Description de la demande</h3>
+                            <div t-if="o.description_demande">
+                                <span t-field="o.description_demande"/>
+                            </div>
+                            <div t-else="">-</div>
+                        </div>
+
+                        <div class="ar_report_section">
+                            <h3>Expression de besoin</h3>
+                            <table class="ar_report_table">
+                                <thead>
+                                    <tr>
+                                        <th>Commande</th>
+                                        <th class="ar_report_num">Quantite</th>
+                                        <th class="ar_report_num">Prix</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="o.line_ids" t-as="line">
+                                        <td><span t-field="line.commande"/></td>
+                                        <td class="ar_report_num"><span t-field="line.quantite"/></td>
+                                        <td class="ar_report_num">
+                                            <span t-esc="'%s DH' % ('{:,.2f}'.format(line.prix).replace(',', ' ').replace('.', ','))"/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="not o.line_ids">
+                                        <td colspan="3">Aucune ligne.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="ar_report_total">
+                                Total :
+                                <span t-field="o.total_prix_display"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

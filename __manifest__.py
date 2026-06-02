@@ -19,6 +19,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "base",
         "mail",
         "hr",
+        "ar_recrutement",
     ],
     "data": [
         "data/sequence.xml",
@@ -26,6 +27,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "security/security.xml",
         "security/record_rules.xml",
         "security/ir.model.access.csv",
+        "reports/demande_sortie_caisse_report.xml",
         "views/demande_sortie_caisse_views.xml",
         "views/regle_validation_views.xml",
         "views/documentation_views.xml",
