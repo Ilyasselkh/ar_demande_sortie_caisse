@@ -104,7 +104,7 @@
 
                         <h1 class="ar_report_title">DEMANDE DE SORTIE DE CAISSE</h1>
                         <div class="ar_report_ref">
-                            Reference :
+                            Référence :
                             <span t-field="o.name"/>
                         </div>
 
@@ -120,12 +120,26 @@
                                     <div class="ar_report_value"><span t-field="o.manager_n1_id"/></div>
                                 </div>
                                 <div class="ar_report_row">
-                                    <div class="ar_report_label">Departement</div>
+                                    <div class="ar_report_label">Département</div>
                                     <div class="ar_report_value"><span t-field="o.department_id"/></div>
                                 </div>
                                 <div class="ar_report_row">
                                     <div class="ar_report_label">Date</div>
                                     <div class="ar_report_value"><span t-field="o.date_demande"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">État</div>
+                                    <div class="ar_report_value"><span t-field="o.state"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Type de demande</div>
+                                    <div class="ar_report_value">
+                                        <span t-field="o.type_demande"/>
+                                        <span t-if="o.type_demande == 'autre' and o.type_demande_autre">
+                                            :
+                                            <span t-field="o.type_demande_autre"/>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +158,7 @@
                                 <thead>
                                     <tr>
                                         <th>Commande</th>
-                                        <th class="ar_report_num">Quantite</th>
+                                        <th class="ar_report_num">Quantité</th>
                                         <th class="ar_report_num">Prix</th>
                                     </tr>
                                 </thead>
@@ -164,6 +178,90 @@
                             <div class="ar_report_total">
                                 Total :
                                 <span t-field="o.total_prix_display"/>
+                            </div>
+                        </div>
+
+                        <div class="ar_report_section">
+                            <h3>Saisie et régularisation</h3>
+                            <div class="ar_report_grid">
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Montant demandé</div>
+                                    <div class="ar_report_value"><span t-field="o.montant_demande_display"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Montant dépensé</div>
+                                    <div class="ar_report_value"><span t-field="o.montant_depense_display"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Montant à rendre</div>
+                                    <div class="ar_report_value"><span t-field="o.montant_a_rendre_display"/></div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Saisie par</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.saisie_user_id" t-field="o.saisie_user_id"/>
+                                        <span t-else="">-</span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Régularisé par</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.regularisateur_id" t-field="o.regularisateur_id"/>
+                                        <span t-else="">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ar_report_section">
+                            <h3>Historique des validations</h3>
+                            <div class="ar_report_grid">
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Validation N+1</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.validateur_n1_id" t-field="o.validateur_n1_id"/>
+                                        <span t-else="">-</span>
+                                        <span t-if="o.date_validation_n1"> - <span t-field="o.date_validation_n1"/></span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Validation FI</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.validateur_fi_done_id" t-field="o.validateur_fi_done_id"/>
+                                        <span t-else="">-</span>
+                                        <span t-if="o.date_validation_fi"> - <span t-field="o.date_validation_fi"/></span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Trésorerie</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.validateur_tresorerie_id" t-field="o.validateur_tresorerie_id"/>
+                                        <span t-else="">-</span>
+                                        <span t-if="o.date_validation_tresorerie"> - <span t-field="o.date_validation_tresorerie"/></span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Validation MD</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.validateur_md_id" t-field="o.validateur_md_id"/>
+                                        <span t-else="">-</span>
+                                        <span t-if="o.date_validation_md"> - <span t-field="o.date_validation_md"/></span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Date de saisie</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.date_saisie" t-field="o.date_saisie"/>
+                                        <span t-else="">-</span>
+                                    </div>
+                                </div>
+                                <div class="ar_report_row">
+                                    <div class="ar_report_label">Date régularisation</div>
+                                    <div class="ar_report_value">
+                                        <span t-if="o.date_regularisation" t-field="o.date_regularisation"/>
+                                        <span t-else="">-</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

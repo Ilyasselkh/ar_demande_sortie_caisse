@@ -14,7 +14,7 @@
                     <p>Voulez-vous remettre cette demande à l’état Expression de besoin ?</p>
                 </div>
 
-                <div class="ar_sc_wizard_message" invisible="action_type not in ['validate_n1', 'validate_tresorerie', 'validate_fi', 'validate_md']">
+                <div class="ar_sc_wizard_message" invisible="action_type not in ['validate_n1', 'validate_tresorerie', 'validate_fi', 'validate_md', 'confirm_saisie', 'regulariser']">
                     <div class="ar_sc_wizard_icon ar_sc_wizard_icon_validate">OK</div>
                     <h2>Confirmer la validation</h2>
                     <p>Voulez-vous vraiment valider cette demande ?</p>
@@ -45,7 +45,7 @@
         <field name="arch" type="xml">
             <list decoration-success="state == 'acceptee'"
                   decoration-danger="state == 'refusee'"
-                  decoration-info="state in ('validation_n1', 'tresorerie', 'validation_fi', 'validation_md')"
+                  decoration-info="state in ('validation_n1', 'validation_fi', 'tresorerie', 'validation_md', 'saisie', 'regularisation')"
                   decoration-muted="state == 'expression_besoin'">
                 <field name="name"/>
                 <field name="state" widget="badge"/>
@@ -120,21 +120,31 @@
                             type="object"
                             class="btn-success"
                             invisible="not can_validate_n1"/>
-                    <button name="action_open_validate_tresorerie_wizard"
-                            string="Valider Trésorerie"
-                            type="object"
-                            class="btn-success"
-                            invisible="not can_validate_tresorerie"/>
                     <button name="action_open_validate_fi_wizard"
                             string="Valider FI"
                             type="object"
                             class="btn-success"
                             invisible="not can_validate_fi"/>
+                    <button name="action_open_validate_tresorerie_wizard"
+                            string="Valider Trésorerie"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_validate_tresorerie"/>
                     <button name="action_open_validate_md_wizard"
                             string="Valider MD"
                             type="object"
                             class="btn-success"
                             invisible="not can_validate_md"/>
+                    <button name="action_open_confirm_saisie_wizard"
+                            string="Confirmer la saisie"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_saisir_depense"/>
+                    <button name="action_open_regulariser_wizard"
+                            string="Régulariser"
+                            type="object"
+                            class="btn-success"
+                            invisible="not can_regulariser"/>
                     <button name="action_open_refuse_wizard"
                             string="Refuser"
                             type="object"
@@ -147,7 +157,7 @@
                             invisible="not can_modify or state in ['acceptee', 'refusee']"/>
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="expression_besoin,validation_n1,tresorerie,validation_fi,validation_md,acceptee,refusee"/>
+                           statusbar_visible="expression_besoin,validation_n1,validation_fi,tresorerie,validation_md,saisie,regularisation,acceptee,refusee"/>
                 </header>
                 <sheet class="ar_sortie_caisse_sheet" style="max-width: none; width: calc(100% - 32px);">
                     <field name="can_validate_n1" invisible="1"/>
@@ -157,6 +167,8 @@
                     <field name="can_refuse" invisible="1"/>
                     <field name="can_modify" invisible="1"/>
                     <field name="can_edit_demande" invisible="1"/>
+                    <field name="can_saisir_depense" invisible="1"/>
+                    <field name="can_regulariser" invisible="1"/>
                     <field name="demandeur_user_id" invisible="1"/>
 
                     <div class="ar_sortie_caisse_title">
@@ -198,6 +210,14 @@
                         </group>
 
                         <group class="ar_sortie_caisse_panel ar_sortie_caisse_description">
+                            <field name="type_demande"
+                                   readonly="not can_edit_demande"
+                                   required="1"/>
+                            <field name="type_demande_autre"
+                                   placeholder="Préciser le type de demande"
+                                   invisible="type_demande != 'autre'"
+                                   readonly="not can_edit_demande"
+                                   required="type_demande == 'autre'"/>
                             <field name="description_demande"
                                    placeholder="Description de la demande"
                                    readonly="not can_edit_demande"
@@ -223,6 +243,21 @@
                         <field name="total_prix_display" colspan="4" readonly="1"/>
                     </group>
 
+                    <group class="ar_sortie_caisse_panel ar_sortie_caisse_saisie" col="4" invisible="state not in ['saisie', 'regularisation', 'acceptee']">
+                        <separator string="Saisie" colspan="4"/>
+                        <field name="montant_depense"
+                               colspan="2"
+                               readonly="not can_saisir_depense"
+                               required="state == 'saisie'"/>
+                        <field name="montant_a_rendre_display"
+                               colspan="2"
+                               readonly="1"/>
+                        <field name="justificatif_saisie_ids"
+                               widget="many2many_binary"
+                               colspan="4"
+                               readonly="not can_saisir_depense"/>
+                    </group>
+
                 </sheet>
                 <chatter/>
             </form>
@@ -244,7 +279,9 @@
                 <filter string="Trésorerie" name="filter_tresorerie" domain="[('state','=','tresorerie')]"/>
                 <filter string="Validation FI" name="filter_fi" domain="[('state','=','validation_fi')]"/>
                 <filter string="Validation MD" name="filter_md" domain="[('state','=','validation_md')]"/>
-                <filter string="Acceptée" name="filter_acceptee" domain="[('state','=','acceptee')]"/>
+                <filter string="Saisie" name="filter_saisie" domain="[('state','=','saisie')]"/>
+                <filter string="Régularisation" name="filter_regularisation" domain="[('state','=','regularisation')]"/>
+                <filter string="Archive" name="filter_acceptee" domain="[('state','=','acceptee')]"/>
                 <filter string="Refusée" name="filter_refusee" domain="[('state','=','refusee')]"/>
                 <group>
                     <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
@@ -265,7 +302,7 @@
     </record>
 
     <record id="action_sortie_caisse_archive_acceptee" model="ir.actions.act_window">
-        <field name="name">Demandes Acceptées</field>
+        <field name="name">Demandes Archivées</field>
         <field name="res_model">ar.demande.sortie.caisse</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_ar_demande_sortie_caisse_search"/>

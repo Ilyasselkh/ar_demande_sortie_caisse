@@ -17,7 +17,7 @@
               sequence="20"/>
 
     <menuitem id="menu_sortie_caisse_archive_acceptee"
-              name="Acceptée"
+              name="Archive"
               parent="menu_sortie_caisse_archives"
               action="action_sortie_caisse_archive_acceptee"
               sequence="1"/>

@@ -127,17 +127,69 @@
             </field>
         </record>
 
-        <record id="mail_template_sortie_caisse_accepted" model="mail.template">
-            <field name="name">Sortie Caisse - Demande acceptée</field>
+        <record id="mail_template_sortie_caisse_to_saisie" model="mail.template">
+            <field name="name">Sortie Caisse - Saisie demandeur</field>
             <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
-            <field name="subject">[Sortie Caisse] {{ object.name }} - Demande acceptée</field>
+            <field name="subject">[Sortie Caisse] {{ object.name }} - Saisie requise</field>
             <field name="email_from">Sortie Caisse &lt;AR-ARMaroc@araymond.com&gt;</field>
             <field name="email_to"></field>
             <field name="body_html" type="html">
                 <div>
                     <p>Bonjour,</p>
-                    <p>Votre demande <b><t t-out="object.name"/></b> a été <b>acceptée</b>.</p>
+                    <p>Votre demande <b><t t-out="object.name"/></b> a été validée et nécessite votre saisie finale.</p>
                     <p><b>Montant demandé :</b> <t t-out="object.montant_demande"/></p>
+                    <p><b>Total des prix :</b> <t t-out="object.total_prix"/></p>
+                    <p>Merci de renseigner le montant dépensé et d'ajouter les justificatifs.</p>
+                    <t t-set="base_url" t-value="object.get_base_url()"/>
+                    <div style="margin: 16px 0px;">
+                        <a t-attf-href="{{ base_url }}/web#id={{ object.id }}&amp;model=ar.demande.sortie.caisse&amp;view_type=form"
+                           style="background-color:#1481f4;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;font-size:13px;">
+                            Ouvrir la demande
+                        </a>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_sortie_caisse_to_regularisation" model="mail.template">
+            <field name="name">Sortie Caisse - Régularisation Trésorerie</field>
+            <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+            <field name="subject">[Sortie Caisse] {{ object.name }} - Régularisation requise</field>
+            <field name="email_from">Sortie Caisse &lt;AR-ARMaroc@araymond.com&gt;</field>
+            <field name="email_to"></field>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Bonjour,</p>
+                    <p>La demande <b><t t-out="object.name"/></b> nécessite une régularisation Trésorerie.</p>
+                    <p><b>Demandeur :</b> <t t-out="object.demandeur_id.name or ''"/></p>
+                    <p><b>Montant demandé :</b> <t t-out="object.montant_demande"/></p>
+                    <p><b>Montant dépensé :</b> <t t-out="object.montant_depense"/></p>
+                    <p><b>Montant à rendre :</b> <t t-out="object.montant_a_rendre"/></p>
+                    <p><b>Justificatifs :</b> <t t-out="len(object.justificatif_saisie_ids)"/></p>
+                    <t t-set="base_url" t-value="object.get_base_url()"/>
+                    <div style="margin: 16px 0px;">
+                        <a t-attf-href="{{ base_url }}/web#id={{ object.id }}&amp;model=ar.demande.sortie.caisse&amp;view_type=form"
+                           style="background-color:#1481f4;padding:8px 16px;text-decoration:none;color:#fff;border-radius:5px;font-size:13px;">
+                            Ouvrir la demande
+                        </a>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+        <record id="mail_template_sortie_caisse_accepted" model="mail.template">
+            <field name="name">Sortie Caisse - Demande archivée</field>
+            <field name="model_id" ref="model_ar_demande_sortie_caisse"/>
+            <field name="subject">[Sortie Caisse] {{ object.name }} - Demande archivée</field>
+            <field name="email_from">Sortie Caisse &lt;AR-ARMaroc@araymond.com&gt;</field>
+            <field name="email_to"></field>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Bonjour,</p>
+                    <p>Votre demande <b><t t-out="object.name"/></b> a été <b>archivée</b>.</p>
+                    <p><b>Montant demandé :</b> <t t-out="object.montant_demande"/></p>
+                    <p><b>Montant dépensé :</b> <t t-out="object.montant_depense"/></p>
+                    <p><b>Montant à rendre :</b> <t t-out="object.montant_a_rendre"/></p>
                     <p><b>Total des prix :</b> <t t-out="object.total_prix"/></p>
                     <t t-set="base_url" t-value="object.get_base_url()"/>
                     <div style="margin: 16px 0px;">

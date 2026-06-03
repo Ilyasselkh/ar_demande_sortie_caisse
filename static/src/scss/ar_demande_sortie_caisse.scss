@@ -477,6 +477,17 @@
         flex: 1 1 auto;
     }
 
+    .ar_sortie_caisse_identity > .o_inner_group,
+    .ar_sortie_caisse_identity > .o_group,
+    .ar_sortie_caisse_identity > div:not(.o_horizontal_separator) {
+        flex: 0 0 auto;
+    }
+
+    .ar_sortie_caisse_identity .o_inner_group {
+        align-self: stretch;
+        margin-top: 0;
+    }
+
     .ar_sortie_caisse_main_row .ar_sortie_caisse_identity,
     .ar_sortie_caisse_main_row .ar_sortie_caisse_description {
         display: flex;

@@ -13,6 +13,8 @@ class ARDemandeSortieCaisseActionWizard(models.TransientModel):
         ("validate_tresorerie", "Valider Trésorerie"),
         ("validate_fi", "Valider FI"),
         ("validate_md", "Valider MD"),
+        ("confirm_saisie", "Confirmer la saisie"),
+        ("regulariser", "Régulariser"),
         ("refuse", "Refuser"),
     ], string="Type d'action", required=True, readonly=True)
     def action_confirm(self):
@@ -30,6 +32,10 @@ class ARDemandeSortieCaisseActionWizard(models.TransientModel):
             self.demande_id.action_valider_fi()
         elif self.action_type == "validate_md":
             self.demande_id.action_valider_md()
+        elif self.action_type == "confirm_saisie":
+            self.demande_id.action_confirmer_saisie()
+        elif self.action_type == "regulariser":
+            self.demande_id.action_regulariser()
         elif self.action_type == "refuse":
             self.demande_id.action_refuser()
         else:

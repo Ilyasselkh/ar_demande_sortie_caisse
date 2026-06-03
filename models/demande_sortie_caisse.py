@@ -18,10 +18,12 @@ class ARDemandeSortieCaisse(models.Model):
     state = fields.Selection([
         ("expression_besoin", "Expression de besoin"),
         ("validation_n1", "Validation N+1"),
-        ("tresorerie", "Trésorerie"),
         ("validation_fi", "Validation FI"),
+        ("tresorerie", "Trésorerie"),
         ("validation_md", "Validation MD"),
-        ("acceptee", "Acceptée"),
+        ("saisie", "Saisie"),
+        ("regularisation", "Régularisation"),
+        ("acceptee", "Archive"),
         ("refusee", "Refusée"),
     ], string="État", default="expression_besoin", required=True, tracking=True)
 
@@ -72,6 +74,16 @@ class ARDemandeSortieCaisse(models.Model):
         compute="_compute_total_prix",
         readonly=True,
     )
+    type_demande = fields.Selection([
+        ("indemnite_rh", "Indemnité RH"),
+        ("reception_boissons", "Réception/Boissons"),
+        ("cas_urgence", "Cas d’urgence"),
+        ("moyens_generaux", "Moyens généraux"),
+        ("poste", "Poste"),
+        ("maintenance", "Maintenance"),
+        ("autre", "Autre"),
+    ], string="Type de demande", required=True, tracking=True)
+    type_demande_autre = fields.Char(string="Autre type de demande", tracking=True)
     description_demande = fields.Text(string="Description de la demande", required=True, tracking=True)
     attachment_ids = fields.Many2many(
         "ir.attachment",
@@ -98,6 +110,32 @@ class ARDemandeSortieCaisse(models.Model):
         compute="_compute_total_prix",
         readonly=True,
     )
+    montant_depense = fields.Float(string="Montant dépensé", tracking=True)
+    montant_depense_display = fields.Char(
+        string="Montant dépensé",
+        compute="_compute_montants_saisie",
+        readonly=True,
+    )
+    montant_a_rendre = fields.Float(
+        string="Montant à rendre",
+        compute="_compute_montants_saisie",
+        store=True,
+        readonly=True,
+        tracking=True,
+    )
+    montant_a_rendre_display = fields.Char(
+        string="Montant à rendre",
+        compute="_compute_montants_saisie",
+        readonly=True,
+    )
+    justificatif_saisie_ids = fields.Many2many(
+        "ir.attachment",
+        "ar_sortie_caisse_saisie_attachment_rel",
+        "demande_id",
+        "attachment_id",
+        string="Justificatifs de saisie",
+        tracking=True,
+    )
 
     regle_validation_id = fields.Many2one(
         "ar.sortie.caisse.regle.validation",
@@ -113,12 +151,16 @@ class ARDemandeSortieCaisse(models.Model):
     date_validation_tresorerie = fields.Datetime(string="Date validation Trésorerie", readonly=True, tracking=True)
     date_validation_fi = fields.Datetime(string="Date validation FI", readonly=True, tracking=True)
     date_validation_md = fields.Datetime(string="Date validation MD", readonly=True, tracking=True)
-    date_acceptation = fields.Datetime(string="Date d'acceptation", readonly=True, tracking=True)
+    date_saisie = fields.Datetime(string="Date de saisie", readonly=True, tracking=True)
+    date_regularisation = fields.Datetime(string="Date régularisation", readonly=True, tracking=True)
+    date_acceptation = fields.Datetime(string="Date d'archive", readonly=True, tracking=True)
     date_refus = fields.Datetime(string="Date de refus", readonly=True, tracking=True)
     validateur_n1_id = fields.Many2one("res.users", string="Validé par N+1", readonly=True, tracking=True)
     validateur_tresorerie_id = fields.Many2one("res.users", string="Validé par Trésorerie", readonly=True, tracking=True)
     validateur_fi_done_id = fields.Many2one("res.users", string="Validé par FI", readonly=True, tracking=True)
     validateur_md_id = fields.Many2one("res.users", string="Validé par MD", readonly=True, tracking=True)
+    saisie_user_id = fields.Many2one("res.users", string="Saisie par", readonly=True, tracking=True)
+    regularisateur_id = fields.Many2one("res.users", string="Régularisé par", readonly=True, tracking=True)
     motif_refus = fields.Text(string="Motif de refus", tracking=True)
 
     can_validate_n1 = fields.Boolean(compute="_compute_access_flags")
@@ -128,6 +170,8 @@ class ARDemandeSortieCaisse(models.Model):
     can_refuse = fields.Boolean(compute="_compute_access_flags")
     can_modify = fields.Boolean(compute="_compute_access_flags")
     can_edit_demande = fields.Boolean(compute="_compute_access_flags")
+    can_saisir_depense = fields.Boolean(compute="_compute_access_flags")
+    can_regulariser = fields.Boolean(compute="_compute_access_flags")
 
     @api.model
     def _default_employee(self):
@@ -160,6 +204,14 @@ class ARDemandeSortieCaisse(models.Model):
 
     def _format_amount_dh(self, amount):
         return f"{amount:,.2f}".replace(",", " ").replace(".", ",") + " DH"
+
+    @api.depends("montant_demande", "montant_depense")
+    def _compute_montants_saisie(self):
+        for rec in self:
+            montant_a_rendre = max((rec.montant_demande or 0.0) - (rec.montant_depense or 0.0), 0.0)
+            rec.montant_a_rendre = montant_a_rendre
+            rec.montant_depense_display = rec._format_amount_dh(rec.montant_depense or 0.0)
+            rec.montant_a_rendre_display = rec._format_amount_dh(montant_a_rendre)
 
     @api.depends(
         "state",
@@ -206,12 +258,30 @@ class ARDemandeSortieCaisse(models.Model):
                 or rec.can_validate_md
             )
             rec.can_edit_demande = rec.state == "expression_besoin" and rec.demandeur_user_id == user
+            rec.can_saisir_depense = rec.state == "saisie" and rec.demandeur_user_id == user
+            rec.can_regulariser = (
+                rec.state == "regularisation"
+                and is_tresorerie
+                and user.has_group("ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie")
+            )
 
     @api.constrains("montant_demande", "line_ids")
     def _check_required_amount(self):
         for rec in self:
             if rec.state != "expression_besoin" and rec.montant_demande <= 0:
                 raise ValidationError(_("Le montant demandé doit être supérieur à zéro."))
+
+    @api.constrains("montant_depense")
+    def _check_montant_depense(self):
+        for rec in self:
+            if rec.montant_depense < 0:
+                raise ValidationError(_("Le montant dépensé ne peut pas être négatif."))
+
+    @api.constrains("type_demande", "type_demande_autre")
+    def _check_type_demande_autre(self):
+        for rec in self:
+            if rec.type_demande == "autre" and not rec.type_demande_autre:
+                raise ValidationError(_("Le champ Autre type de demande est obligatoire lorsque le type de demande est Autre."))
 
     def _find_validation_rule(self):
         self.ensure_one()
@@ -299,6 +369,10 @@ class ARDemandeSortieCaisse(models.Model):
             self._send_to_current_fi("ar_demande_sortie_caisse.mail_template_sortie_caisse_to_fi")
         elif self.state == "validation_md":
             self._send_to_md("ar_demande_sortie_caisse.mail_template_sortie_caisse_to_md")
+        elif self.state == "saisie":
+            self._send_to_demandeur("ar_demande_sortie_caisse.mail_template_sortie_caisse_to_saisie")
+        elif self.state == "regularisation":
+            self._send_to_tresorerie("ar_demande_sortie_caisse.mail_template_sortie_caisse_to_regularisation")
         elif self.state == "acceptee":
             self._send_to_demandeur("ar_demande_sortie_caisse.mail_template_sortie_caisse_accepted")
         elif self.state == "refusee":
@@ -329,10 +403,14 @@ class ARDemandeSortieCaisse(models.Model):
             "date_validation_md",
             "date_acceptation",
             "date_refus",
+            "date_saisie",
+            "date_regularisation",
             "validateur_n1_id",
             "validateur_tresorerie_id",
             "validateur_fi_done_id",
             "validateur_md_id",
+            "saisie_user_id",
+            "regularisateur_id",
             "motif_refus",
         }
         protected_fields = {
@@ -344,11 +422,18 @@ class ARDemandeSortieCaisse(models.Model):
             "date_demande",
             "montant_demande",
             "total_prix",
+            "montant_a_rendre",
         }
         editable_fields = {
+            "type_demande",
+            "type_demande_autre",
             "description_demande",
             "attachment_ids",
             "line_ids",
+        }
+        saisie_fields = {
+            "montant_depense",
+            "justificatif_saisie_ids",
         }
 
         if set(vals).issubset({"motif_refus"}):
@@ -367,6 +452,12 @@ class ARDemandeSortieCaisse(models.Model):
             for rec in self:
                 if not rec.can_edit_demande:
                     raise AccessError(_("Vous ne pouvez modifier la demande qu’à l’état Expression de besoin et uniquement si vous êtes le demandeur."))
+            return super().write(vals)
+
+        if set(vals).issubset(saisie_fields):
+            for rec in self:
+                if not rec.can_saisir_depense:
+                    raise AccessError(_("Vous ne pouvez renseigner la saisie qu’à l’état Saisie et uniquement si vous êtes le demandeur."))
             return super().write(vals)
 
         return super().write(vals)
@@ -407,15 +498,14 @@ class ARDemandeSortieCaisse(models.Model):
                 "date_validation_n1": fields.Datetime.now(),
                 "validateur_n1_id": self.env.user.id,
             }
-            if rec.tresorier_id:
-                vals["state"] = "tresorerie"
-            elif rec.validateur_fi_id:
+            if rec.validateur_fi_id:
                 vals["state"] = "validation_fi"
+            elif rec.tresorier_id:
+                vals["state"] = "tresorerie"
             elif rec.validateur_md_prevu_id:
                 vals["state"] = "validation_md"
             else:
-                vals["state"] = "acceptee"
-                vals["date_acceptation"] = fields.Datetime.now()
+                vals["state"] = "saisie"
             rec.with_context(skip_sortie_caisse_access_check=True).write(vals)
             rec.message_post(body=_("Validation N+1 effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
@@ -427,8 +517,7 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_tresorerie": fields.Datetime.now(),
                 "validateur_tresorerie_id": self.env.user.id,
-                "state": "validation_fi" if rec.validateur_fi_id else ("validation_md" if rec.validateur_md_prevu_id else "acceptee"),
-                "date_acceptation": fields.Datetime.now() if not rec.validateur_fi_id and not rec.validateur_md_prevu_id else False,
+                "state": "validation_md" if rec.validateur_md_prevu_id else "saisie",
             })
             rec.message_post(body=_("Validation Trésorerie effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
@@ -440,8 +529,7 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_fi": fields.Datetime.now(),
                 "validateur_fi_done_id": self.env.user.id,
-                "state": "validation_md" if rec.validateur_md_prevu_id else "acceptee",
-                "date_acceptation": fields.Datetime.now() if not rec.validateur_md_prevu_id else False,
+                "state": "tresorerie" if rec.tresorier_id else ("validation_md" if rec.validateur_md_prevu_id else "saisie"),
             })
             rec.message_post(body=_("Validation FI effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
@@ -453,10 +541,38 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_md": fields.Datetime.now(),
                 "validateur_md_id": self.env.user.id,
-                "state": "acceptee",
-                "date_acceptation": fields.Datetime.now(),
+                "state": "saisie",
             })
-            rec.message_post(body=_("Validation MD effectuée par %s. Demande acceptée.") % self.env.user.display_name)
+            rec.message_post(body=_("Validation MD effectuée par %s. Demande transmise au demandeur pour saisie.") % self.env.user.display_name)
+            rec._send_notification_for_current_state()
+
+    def action_confirmer_saisie(self):
+        for rec in self:
+            if not rec.can_saisir_depense:
+                raise AccessError(_("Vous n'avez pas le droit de confirmer la saisie de cette demande."))
+            if rec.montant_depense <= 0:
+                raise ValidationError(_("Le montant dépensé doit être supérieur à zéro avant de confirmer la saisie."))
+            if not rec.justificatif_saisie_ids:
+                raise ValidationError(_("Vous devez ajouter les justificatifs avant de confirmer la saisie."))
+            rec.with_context(skip_sortie_caisse_access_check=True).write({
+                "state": "regularisation",
+                "date_saisie": fields.Datetime.now(),
+                "saisie_user_id": self.env.user.id,
+            })
+            rec.message_post(body=_("Saisie confirmée par %s. Montant à rendre : %s. Demande transmise à la Trésorerie pour régularisation.") % (self.env.user.display_name, rec.montant_a_rendre_display))
+            rec._send_notification_for_current_state()
+
+    def action_regulariser(self):
+        for rec in self:
+            if not rec.can_regulariser:
+                raise AccessError(_("Vous n'avez pas le droit de régulariser cette demande."))
+            rec.with_context(skip_sortie_caisse_access_check=True).write({
+                "state": "acceptee",
+                "date_regularisation": fields.Datetime.now(),
+                "date_acceptation": fields.Datetime.now(),
+                "regularisateur_id": self.env.user.id,
+            })
+            rec.message_post(body=_("Régularisation effectuée par %s. Demande archivée.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
 
     def action_refuser(self):
@@ -486,13 +602,19 @@ class ARDemandeSortieCaisse(models.Model):
                 "date_validation_tresorerie": False,
                 "date_validation_fi": False,
                 "date_validation_md": False,
+                "date_saisie": False,
+                "date_regularisation": False,
                 "date_acceptation": False,
                 "date_refus": False,
                 "validateur_n1_id": False,
                 "validateur_tresorerie_id": False,
                 "validateur_fi_done_id": False,
                 "validateur_md_id": False,
+                "saisie_user_id": False,
+                "regularisateur_id": False,
                 "motif_refus": False,
+                "montant_depense": 0.0,
+                "justificatif_saisie_ids": [(5, 0, 0)],
             })
             rec.message_post(body=_("La demande a été remise à l’état Expression de besoin."))
             rec._send_to_demandeur("ar_demande_sortie_caisse.mail_template_sortie_caisse_back_to_demandeur")
@@ -525,6 +647,12 @@ class ARDemandeSortieCaisse(models.Model):
 
     def action_open_validate_md_wizard(self):
         return self._open_action_wizard("validate_md")
+
+    def action_open_confirm_saisie_wizard(self):
+        return self._open_action_wizard("confirm_saisie")
+
+    def action_open_regulariser_wizard(self):
+        return self._open_action_wizard("regulariser")
 
     def action_open_refuse_wizard(self):
         return self._open_action_wizard("refuse")
