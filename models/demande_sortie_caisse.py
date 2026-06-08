@@ -110,6 +110,12 @@ class ARDemandeSortieCaisse(models.Model):
         compute="_compute_total_prix",
         readonly=True,
     )
+    montant_donne = fields.Float(string="Montant donné", tracking=True)
+    montant_donne_display = fields.Char(
+        string="Montant donné",
+        compute="_compute_montants_saisie",
+        readonly=True,
+    )
     montant_depense = fields.Float(string="Montant dépensé", tracking=True)
     montant_depense_display = fields.Char(
         string="Montant dépensé",
@@ -205,11 +211,15 @@ class ARDemandeSortieCaisse(models.Model):
     def _format_amount_dh(self, amount):
         return f"{amount:,.2f}".replace(",", " ").replace(".", ",") + " DH"
 
-    @api.depends("montant_demande", "montant_depense")
+    @api.depends("montant_demande", "montant_donne", "montant_depense")
     def _compute_montants_saisie(self):
         for rec in self:
-            montant_a_rendre = max((rec.montant_demande or 0.0) - (rec.montant_depense or 0.0), 0.0)
+            if rec.montant_donne > 0:
+                montant_a_rendre = rec.montant_donne - (rec.montant_depense or 0.0)
+            else:
+                montant_a_rendre = max((rec.montant_demande or 0.0) - (rec.montant_depense or 0.0), 0.0)
             rec.montant_a_rendre = montant_a_rendre
+            rec.montant_donne_display = rec._format_amount_dh(rec.montant_donne or 0.0)
             rec.montant_depense_display = rec._format_amount_dh(rec.montant_depense or 0.0)
             rec.montant_a_rendre_display = rec._format_amount_dh(montant_a_rendre)
 
@@ -271,9 +281,11 @@ class ARDemandeSortieCaisse(models.Model):
             if rec.state != "expression_besoin" and rec.montant_demande <= 0:
                 raise ValidationError(_("Le montant demandé doit être supérieur à zéro."))
 
-    @api.constrains("montant_depense")
-    def _check_montant_depense(self):
+    @api.constrains("montant_donne", "montant_depense")
+    def _check_montants_saisie(self):
         for rec in self:
+            if rec.montant_donne < 0:
+                raise ValidationError(_("Le montant donné ne peut pas être négatif."))
             if rec.montant_depense < 0:
                 raise ValidationError(_("Le montant dépensé ne peut pas être négatif."))
 
@@ -435,6 +447,9 @@ class ARDemandeSortieCaisse(models.Model):
             "montant_depense",
             "justificatif_saisie_ids",
         }
+        tresorerie_fields = {
+            "montant_donne",
+        }
 
         if set(vals).issubset({"motif_refus"}):
             for rec in self:
@@ -458,6 +473,12 @@ class ARDemandeSortieCaisse(models.Model):
             for rec in self:
                 if not rec.can_saisir_depense:
                     raise AccessError(_("Vous ne pouvez renseigner la saisie qu’à l’état Saisie et uniquement si vous êtes le demandeur."))
+            return super().write(vals)
+
+        if set(vals).issubset(tresorerie_fields):
+            for rec in self:
+                if not rec.can_validate_tresorerie:
+                    raise AccessError(_("Vous ne pouvez renseigner le montant donné qu’à l’état Trésorerie et uniquement si vous êtes le trésorier."))
             return super().write(vals)
 
         return super().write(vals)
@@ -595,9 +616,6 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "state": "expression_besoin",
                 "regle_validation_id": False,
-                "tresorier_id": False,
-                "validateur_fi_id": False,
-                "validateur_md_prevu_id": False,
                 "date_validation_n1": False,
                 "date_validation_tresorerie": False,
                 "date_validation_fi": False,
@@ -613,10 +631,11 @@ class ARDemandeSortieCaisse(models.Model):
                 "saisie_user_id": False,
                 "regularisateur_id": False,
                 "motif_refus": False,
+                "montant_donne": 0.0,
                 "montant_depense": 0.0,
                 "justificatif_saisie_ids": [(5, 0, 0)],
             })
-            rec.message_post(body=_("La demande a été remise à l’état Expression de besoin."))
+            rec.sudo().message_post(body=_("La demande a été remise à l’état Expression de besoin."))
             rec._send_to_demandeur("ar_demande_sortie_caisse.mail_template_sortie_caisse_back_to_demandeur")
 
     def _open_action_wizard(self, action_type):

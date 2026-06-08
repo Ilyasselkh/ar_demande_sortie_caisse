@@ -243,6 +243,10 @@
                                     <div class="ar_report_label">Montant demandé</div>
                                     <div class="ar_report_value"><span t-field="o.montant_demande_display"/></div>
                                 </div>
+                                <div class="ar_report_row" t-if="o.montant_donne">
+                                    <div class="ar_report_label">Montant donné</div>
+                                    <div class="ar_report_value"><span t-field="o.montant_donne_display"/></div>
+                                </div>
                                 <div class="ar_report_row">
                                     <div class="ar_report_label">Montant dépensé</div>
                                     <div class="ar_report_value"><span t-field="o.montant_depense_display"/></div>

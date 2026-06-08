@@ -163,6 +163,7 @@
                     <p>La demande <b><t t-out="object.name"/></b> nécessite une régularisation Trésorerie.</p>
                     <p><b>Demandeur :</b> <t t-out="object.demandeur_id.name or ''"/></p>
                     <p><b>Montant demandé :</b> <t t-out="object.montant_demande"/></p>
+                    <p t-if="object.montant_donne"><b>Montant donné :</b> <t t-out="object.montant_donne"/></p>
                     <p><b>Montant dépensé :</b> <t t-out="object.montant_depense"/></p>
                     <p><b>Montant à rendre :</b> <t t-out="object.montant_a_rendre"/></p>
                     <p><b>Justificatifs :</b> <t t-out="len(object.justificatif_saisie_ids)"/></p>
@@ -188,6 +189,7 @@
                     <p>Bonjour,</p>
                     <p>Votre demande <b><t t-out="object.name"/></b> a été <b>archivée</b>.</p>
                     <p><b>Montant demandé :</b> <t t-out="object.montant_demande"/></p>
+                    <p t-if="object.montant_donne"><b>Montant donné :</b> <t t-out="object.montant_donne"/></p>
                     <p><b>Montant dépensé :</b> <t t-out="object.montant_depense"/></p>
                     <p><b>Montant à rendre :</b> <t t-out="object.montant_a_rendre"/></p>
                     <p><b>Total des prix :</b> <t t-out="object.total_prix"/></p>

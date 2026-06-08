@@ -240,6 +240,13 @@
                         <field name="total_prix_display" colspan="4" readonly="1"/>
                     </group>
 
+                    <group class="ar_sortie_caisse_panel ar_sortie_caisse_saisie" col="4" invisible="state != 'tresorerie' and (state not in ['saisie', 'regularisation', 'acceptee'] or montant_donne &lt;= 0)">
+                        <separator string="Trésorerie" colspan="4"/>
+                        <field name="montant_donne"
+                               colspan="4"
+                               readonly="not can_validate_tresorerie"/>
+                    </group>
+
                     <group class="ar_sortie_caisse_panel ar_sortie_caisse_saisie" col="4" invisible="state not in ['saisie', 'regularisation', 'acceptee']">
                         <separator string="Saisie" colspan="4"/>
                         <field name="montant_depense"
