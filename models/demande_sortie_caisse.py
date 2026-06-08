@@ -19,8 +19,8 @@ class ARDemandeSortieCaisse(models.Model):
         ("expression_besoin", "Expression de besoin"),
         ("validation_n1", "Validation N+1"),
         ("validation_fi", "Validation FI"),
-        ("tresorerie", "Trésorerie"),
         ("validation_md", "Validation MD"),
+        ("tresorerie", "Trésorerie"),
         ("saisie", "Saisie"),
         ("regularisation", "Régularisation"),
         ("acceptee", "Archive"),
@@ -57,7 +57,7 @@ class ARDemandeSortieCaisse(models.Model):
         tracking=True,
     )
     date_demande = fields.Datetime(
-        string="Date",
+        string="Date de création",
         default=fields.Datetime.now,
         readonly=True,
         tracking=True,
@@ -75,11 +75,11 @@ class ARDemandeSortieCaisse(models.Model):
         readonly=True,
     )
     type_demande = fields.Selection([
-        ("indemnite_rh", "Indemnité RH"),
-        ("reception_boissons", "Réception/Boissons"),
         ("cas_urgence", "Cas d’urgence"),
+        ("reception_boissons", "Repas"),
         ("moyens_generaux", "Moyens généraux"),
-        ("poste", "Poste"),
+        ("poste", "Envoi Postal"),
+        ("indemnite_rh", "Indemnité RH"),
         ("maintenance", "Maintenance"),
         ("autre", "Autre"),
     ], string="Type de demande", required=True, tracking=True)
@@ -500,10 +500,10 @@ class ARDemandeSortieCaisse(models.Model):
             }
             if rec.validateur_fi_id:
                 vals["state"] = "validation_fi"
-            elif rec.tresorier_id:
-                vals["state"] = "tresorerie"
             elif rec.validateur_md_prevu_id:
                 vals["state"] = "validation_md"
+            elif rec.tresorier_id:
+                vals["state"] = "tresorerie"
             else:
                 vals["state"] = "saisie"
             rec.with_context(skip_sortie_caisse_access_check=True).write(vals)
@@ -517,7 +517,7 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_tresorerie": fields.Datetime.now(),
                 "validateur_tresorerie_id": self.env.user.id,
-                "state": "validation_md" if rec.validateur_md_prevu_id else "saisie",
+                "state": "saisie",
             })
             rec.message_post(body=_("Validation Trésorerie effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
@@ -529,7 +529,7 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_fi": fields.Datetime.now(),
                 "validateur_fi_done_id": self.env.user.id,
-                "state": "tresorerie" if rec.tresorier_id else ("validation_md" if rec.validateur_md_prevu_id else "saisie"),
+                "state": "validation_md" if rec.validateur_md_prevu_id else ("tresorerie" if rec.tresorier_id else "saisie"),
             })
             rec.message_post(body=_("Validation FI effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
@@ -541,9 +541,9 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_md": fields.Datetime.now(),
                 "validateur_md_id": self.env.user.id,
-                "state": "saisie",
+                "state": "tresorerie" if rec.tresorier_id else "saisie",
             })
-            rec.message_post(body=_("Validation MD effectuée par %s. Demande transmise au demandeur pour saisie.") % self.env.user.display_name)
+            rec.message_post(body=_("Validation MD effectuée par %s.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
 
     def action_confirmer_saisie(self):
@@ -669,9 +669,9 @@ class ARDemandeSortieCaisseLine(models.Model):
         required=True,
         ondelete="cascade",
     )
-    commande = fields.Char(string="Commande", required=True)
+    commande = fields.Char(string="Description de besoin", required=True)
     quantite = fields.Float(string="Quantité", required=True, default=1.0)
-    prix = fields.Float(string="Prix", required=True)
+    prix = fields.Float(string="Prix unitaire", required=True)
     sous_total = fields.Float(string="Sous-total", compute="_compute_sous_total", store=True)
 
     @api.depends("quantite", "prix")
@@ -685,7 +685,7 @@ class ARDemandeSortieCaisseLine(models.Model):
             if rec.quantite <= 0:
                 raise ValidationError(_("La quantité doit être supérieure à zéro."))
             if rec.prix < 0:
-                raise ValidationError(_("Le prix doit être positif."))
+                raise ValidationError(_("Le prix unitaire doit être positif."))
 
     def _check_demandeur_access(self):
         for rec in self:

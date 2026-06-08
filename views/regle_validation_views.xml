@@ -9,9 +9,9 @@
                 <field name="name"/>
                 <field name="montant_min"/>
                 <field name="montant_max"/>
-                <field name="tresorier_id"/>
                 <field name="validateur_fi_id"/>
                 <field name="validateur_md_id"/>
+                <field name="tresorier_id"/>
             </list>
         </field>
     </record>
@@ -32,9 +32,9 @@
                             <field name="montant_max"/>
                         </group>
                         <group string="Validateurs">
-                            <field name="tresorier_id"/>
                             <field name="validateur_fi_id"/>
                             <field name="validateur_md_id"/>
+                            <field name="tresorier_id"/>
                         </group>
                     </group>
                 </sheet>

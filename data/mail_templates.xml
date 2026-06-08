@@ -75,9 +75,9 @@
                         <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
                             <thead>
                                 <tr>
-                                    <th>Commande</th>
+                                    <th>Description de besoin</th>
                                     <th>Quantité</th>
-                                    <th>Prix</th>
+                                    <th>Prix unitaire</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -19,7 +19,6 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "base",
         "mail",
         "hr",
-        "ar_recrutement",
     ],
     "data": [
         "data/sequence.xml",

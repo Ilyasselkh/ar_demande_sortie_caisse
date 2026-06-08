@@ -25,6 +25,10 @@
                     <h2>Confirmer le refus</h2>
                     <p>Voulez-vous vraiment refuser cette demande ?</p>
                 </div>
+                <field name="motif_refus"
+                       invisible="action_type != 'refuse'"
+                       required="action_type == 'refuse'"
+                       placeholder="Motif de refus"/>
 
                 <footer>
                     <button name="action_confirm"
@@ -50,11 +54,12 @@
                 <field name="name"/>
                 <field name="state" widget="badge"/>
                 <field name="demandeur_id"/>
-                <field name="manager_n1_id"/>
                 <field name="department_id"/>
                 <field name="date_demande"/>
+                <field name="date_validation_tresorerie"/>
+                <field name="date_regularisation"/>
                 <field name="montant_demande_display"/>
-                <field name="total_prix_display"/>
+                <field name="montant_a_rendre_display"/>
             </list>
         </field>
     </record>
@@ -157,7 +162,7 @@
                             invisible="not can_modify or state in ['acceptee', 'refusee']"/>
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="expression_besoin,validation_n1,validation_fi,tresorerie,validation_md,saisie,regularisation,acceptee,refusee"/>
+                           statusbar_visible="expression_besoin,validation_n1,validation_fi,validation_md,tresorerie,saisie,regularisation,acceptee,refusee"/>
                 </header>
                 <sheet class="ar_sortie_caisse_sheet" style="max-width: none; width: calc(100% - 32px);">
                     <field name="can_validate_n1" invisible="1"/>
@@ -177,14 +182,6 @@
                             <h1>
                                 <field name="name" readonly="1" nolabel="1"/>
                             </h1>
-                            <div class="ar_sc_static_3d" aria-hidden="true">
-                                <span class="ar_sc_3d_card ar_sc_3d_card_main"/>
-                                <span class="ar_sc_3d_card ar_sc_3d_card_back"/>
-                                <span class="ar_sc_3d_card ar_sc_3d_card_front"/>
-                                <span class="ar_sc_3d_coin ar_sc_3d_coin_one"/>
-                                <span class="ar_sc_3d_coin ar_sc_3d_coin_two"/>
-                                <span class="ar_sc_3d_coin ar_sc_3d_coin_three"/>
-                            </div>
                         </div>
                         <div class="ar_sortie_caisse_amount">
                             <span>Montant demandé</span>
@@ -202,10 +199,10 @@
                                 <field name="department_id" readonly="1"/>
                                 <field name="date_demande" readonly="1"/>
                             </group>
-                            <group string="Décision" invisible="not can_refuse and not motif_refus">
+                            <group string="Décision" invisible="not motif_refus">
                                 <field name="motif_refus"
-                                       invisible="not can_refuse and not motif_refus"
-                                       readonly="not can_refuse"/>
+                                       invisible="not motif_refus"
+                                       readonly="1"/>
                             </group>
                         </group>
 
@@ -276,9 +273,9 @@
                 <field name="state"/>
                 <filter string="Expression de besoin" name="filter_expression" domain="[('state','=','expression_besoin')]"/>
                 <filter string="Validation N+1" name="filter_n1" domain="[('state','=','validation_n1')]"/>
-                <filter string="Trésorerie" name="filter_tresorerie" domain="[('state','=','tresorerie')]"/>
                 <filter string="Validation FI" name="filter_fi" domain="[('state','=','validation_fi')]"/>
                 <filter string="Validation MD" name="filter_md" domain="[('state','=','validation_md')]"/>
+                <filter string="Trésorerie" name="filter_tresorerie" domain="[('state','=','tresorerie')]"/>
                 <filter string="Saisie" name="filter_saisie" domain="[('state','=','saisie')]"/>
                 <filter string="Régularisation" name="filter_regularisation" domain="[('state','=','regularisation')]"/>
                 <filter string="Archive" name="filter_acceptee" domain="[('state','=','acceptee')]"/>

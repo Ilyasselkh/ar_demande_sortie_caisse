@@ -8,8 +8,8 @@ class ARSortieCaisseRegleValidation(models.Model):
     _order = "montant_min asc, id asc"
 
     name = fields.Char(string="Nom", compute="_compute_name", store=True)
-    montant_min = fields.Float(string="Prix de", required=True)
-    montant_max = fields.Float(string="Prix à", required=True)
+    montant_min = fields.Float(string="Valeur de", required=True)
+    montant_max = fields.Float(string="Valeur à", required=True)
     active = fields.Boolean(default=True)
     tresorier_id = fields.Many2one("res.users", string="Trésorerie")
     validateur_fi_id = fields.Many2one("res.users", string="Validation FI")

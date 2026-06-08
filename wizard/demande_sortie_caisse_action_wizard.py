@@ -17,6 +17,8 @@ class ARDemandeSortieCaisseActionWizard(models.TransientModel):
         ("regulariser", "Régulariser"),
         ("refuse", "Refuser"),
     ], string="Type d'action", required=True, readonly=True)
+    motif_refus = fields.Text(string="Motif de refus")
+
     def action_confirm(self):
         self.ensure_one()
         if not self.demande_id:
@@ -37,6 +39,9 @@ class ARDemandeSortieCaisseActionWizard(models.TransientModel):
         elif self.action_type == "regulariser":
             self.demande_id.action_regulariser()
         elif self.action_type == "refuse":
+            if not self.motif_refus:
+                raise ValidationError(_("Le champ Motif de refus est obligatoire avant de refuser la demande."))
+            self.demande_id.write({"motif_refus": self.motif_refus})
             self.demande_id.action_refuser()
         else:
             raise ValidationError(_("Action inconnue."))
