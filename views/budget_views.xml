@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sortie_caisse_budget_list" model="ir.ui.view">
+        <field name="name">ar.sortie.caisse.budget.list</field>
+        <field name="model">ar.sortie.caisse.budget</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="active"/>
+                <field name="name"/>
+                <field name="montant_budget"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_sortie_caisse_budget_form" model="ir.ui.view">
+        <field name="name">ar.sortie.caisse.budget.form</field>
+        <field name="model">ar.sortie.caisse.budget</field>
+        <field name="arch" type="xml">
+            <form string="Budget">
+                <sheet>
+                    <group>
+                        <field name="active"/>
+                        <field name="name" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="montant_budget"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sortie_caisse_budget" model="ir.actions.act_window">
+        <field name="name">Budget</field>
+        <field name="res_model">ar.sortie.caisse.budget</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

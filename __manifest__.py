@@ -29,6 +29,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "reports/demande_sortie_caisse_report.xml",
         "views/demande_sortie_caisse_views.xml",
         "views/regle_validation_views.xml",
+        "views/budget_views.xml",
         "views/documentation_views.xml",
         "views/menus.xml",
     ],

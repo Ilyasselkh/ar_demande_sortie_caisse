@@ -58,6 +58,7 @@
                 <field name="date_demande"/>
                 <field name="date_validation_tresorerie"/>
                 <field name="date_regularisation"/>
+                <field name="budget_mensuel_depasse" widget="boolean_toggle" readonly="1"/>
                 <field name="montant_demande_display"/>
                 <field name="montant_a_rendre_display"/>
             </list>
@@ -175,6 +176,7 @@
                     <field name="can_saisir_depense" invisible="1"/>
                     <field name="can_regulariser" invisible="1"/>
                     <field name="demandeur_user_id" invisible="1"/>
+                    <field name="budget_id" invisible="1"/>
 
                     <div class="ar_sortie_caisse_title">
                         <div>
@@ -287,6 +289,7 @@
                 <filter string="Régularisation" name="filter_regularisation" domain="[('state','=','regularisation')]"/>
                 <filter string="Archive" name="filter_acceptee" domain="[('state','=','acceptee')]"/>
                 <filter string="Refusée" name="filter_refusee" domain="[('state','=','refusee')]"/>
+                <filter string="Budget dépassé" name="filter_budget_depasse" domain="[('budget_mensuel_depasse','=',True)]"/>
                 <group>
                     <filter string="État" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Département" name="group_department" context="{'group_by': 'department_id'}"/>

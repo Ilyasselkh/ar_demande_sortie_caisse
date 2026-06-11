@@ -5,15 +5,16 @@ from odoo.exceptions import ValidationError
 class ARSortieCaisseRegleValidation(models.Model):
     _name = "ar.sortie.caisse.regle.validation"
     _description = "Règle de validation sortie caisse"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "montant_min asc, id asc"
 
     name = fields.Char(string="Nom", compute="_compute_name", store=True)
-    montant_min = fields.Float(string="Valeur de", required=True)
-    montant_max = fields.Float(string="Valeur à", required=True)
-    active = fields.Boolean(default=True)
-    tresorier_id = fields.Many2one("res.users", string="Trésorerie")
-    validateur_fi_id = fields.Many2one("res.users", string="Validation FI")
-    validateur_md_id = fields.Many2one("res.users", string="Validation MD")
+    montant_min = fields.Float(string="Valeur de", required=True, tracking=True)
+    montant_max = fields.Float(string="Valeur à", required=True, tracking=True)
+    active = fields.Boolean(default=True, tracking=True)
+    tresorier_id = fields.Many2one("res.users", string="Trésorerie", tracking=True)
+    validateur_fi_id = fields.Many2one("res.users", string="Validation FI", tracking=True)
+    validateur_md_id = fields.Many2one("res.users", string="Validation MD", tracking=True)
 
     @api.depends("montant_min", "montant_max")
     def _compute_name(self):

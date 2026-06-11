@@ -1,3 +1,5 @@
+from datetime import datetime, time
+
 from odoo import models, fields, api, _
 from odoo.exceptions import AccessError, ValidationError
 
@@ -152,6 +154,10 @@ class ARDemandeSortieCaisse(models.Model):
     tresorier_id = fields.Many2one("res.users", string="Trésorerie", readonly=True, tracking=True)
     validateur_fi_id = fields.Many2one("res.users", string="Validation FI", readonly=True, tracking=True)
     validateur_md_prevu_id = fields.Many2one("res.users", string="Validation MD prévue", readonly=True, tracking=True)
+    budget_id = fields.Many2one("ar.sortie.caisse.budget", string="Budget", readonly=True, tracking=True)
+    budget_mensuel_montant = fields.Float(string="Budget fixe", readonly=True, tracking=True)
+    montant_mois_courant = fields.Float(string="Total mensuel demandé", readonly=True, tracking=True)
+    budget_mensuel_depasse = fields.Boolean(string="Budget dépassé", readonly=True, tracking=True)
 
     date_validation_n1 = fields.Datetime(string="Date validation N+1", readonly=True, tracking=True)
     date_validation_tresorerie = fields.Datetime(string="Date validation Trésorerie", readonly=True, tracking=True)
@@ -266,6 +272,11 @@ class ARDemandeSortieCaisse(models.Model):
                 or rec.can_validate_tresorerie
                 or rec.can_validate_fi
                 or rec.can_validate_md
+                or (
+                    rec.state == "regularisation"
+                    and is_tresorerie
+                    and user.has_group("ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie")
+                )
             )
             rec.can_edit_demande = rec.state == "expression_besoin" and rec.demandeur_user_id == user
             rec.can_saisir_depense = rec.state == "saisie" and rec.demandeur_user_id == user
@@ -302,6 +313,50 @@ class ARDemandeSortieCaisse(models.Model):
             ("montant_min", "<=", self.montant_demande),
             ("montant_max", ">=", self.montant_demande),
         ], limit=1)
+
+    def _find_full_validation_rule(self):
+        self.ensure_one()
+        return self.env["ar.sortie.caisse.regle.validation"].search([
+            ("active", "=", True),
+            ("tresorier_id", "!=", False),
+            ("validateur_fi_id", "!=", False),
+            ("validateur_md_id", "!=", False),
+        ], limit=1)
+
+    def _get_current_month_requested_total(self):
+        self.ensure_one()
+        current_date = fields.Date.to_date(self.date_demande) if self.date_demande else fields.Date.context_today(self)
+        start_date = current_date.replace(day=1)
+        if start_date.month == 12:
+            end_date = start_date.replace(year=start_date.year + 1, month=1)
+        else:
+            end_date = start_date.replace(month=start_date.month + 1)
+        start_dt = datetime.combine(start_date, time.min)
+        end_dt = datetime.combine(end_date, time.min)
+        demande_model = self.env["ar.demande.sortie.caisse"]
+        demande_model.flush_model(["montant_demande", "date_demande", "state"])
+        grouped = demande_model.sudo().read_group([
+            ("date_demande", ">=", fields.Datetime.to_string(start_dt)),
+            ("date_demande", "<", fields.Datetime.to_string(end_dt)),
+            ("state", "!=", "refusee"),
+        ], ["montant_demande:sum"], [])
+        if not grouped:
+            return 0.0
+        return grouped[0].get("montant_demande_sum") or grouped[0].get("montant_demande") or 0.0
+
+    def _get_budget_validation_values(self):
+        self.ensure_one()
+        budget = self.env["ar.sortie.caisse.budget"].sudo()._get_active_budget()
+        monthly_total = self._get_current_month_requested_total()
+        budget_amount = budget.montant_budget if budget else 0.0
+        budget_exceeded = bool(budget and monthly_total > budget_amount)
+
+        return {
+            "budget_id": budget.id if budget else False,
+            "budget_mensuel_montant": budget_amount,
+            "montant_mois_courant": monthly_total,
+            "budget_mensuel_depasse": budget_exceeded,
+        }
 
     def _clean_header(self, value):
         if not value:
@@ -409,6 +464,10 @@ class ARDemandeSortieCaisse(models.Model):
             "tresorier_id",
             "validateur_fi_id",
             "validateur_md_prevu_id",
+            "budget_id",
+            "budget_mensuel_montant",
+            "montant_mois_courant",
+            "budget_mensuel_depasse",
             "date_validation_n1",
             "date_validation_tresorerie",
             "date_validation_fi",
@@ -497,6 +556,14 @@ class ARDemandeSortieCaisse(models.Model):
             rule = rec._find_validation_rule()
             if not rule:
                 raise ValidationError(_("Aucune règle de validation active ne couvre ce montant demandé."))
+            budget_values = rec._get_budget_validation_values()
+            if budget_values["budget_mensuel_depasse"]:
+                full_rule = rec._find_full_validation_rule()
+                if not full_rule:
+                    raise ValidationError(_(
+                        "Le budget mensuel est dépassé. Vous devez créer une règle de validation active avec les 3 validateurs : Trésorerie, FI et MD."
+                    ))
+                rule = full_rule
 
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "regle_validation_id": rule.id,
@@ -504,7 +571,15 @@ class ARDemandeSortieCaisse(models.Model):
                 "validateur_fi_id": rule.validateur_fi_id.id,
                 "validateur_md_prevu_id": rule.validateur_md_id.id,
                 "state": "validation_n1",
+                **budget_values,
             })
+            if budget_values["budget_mensuel_depasse"]:
+                rec.message_post(body=_(
+                    "Budget mensuel dépassé : total mensuel demandé %s / budget %s. Validation complète requise."
+                ) % (
+                    rec._format_amount_dh(budget_values["montant_mois_courant"]),
+                    rec._format_amount_dh(budget_values["budget_mensuel_montant"]),
+                ))
             rec._send_notification_for_current_state()
 
     def _is_current_user_real_manager_n1(self):
@@ -616,6 +691,10 @@ class ARDemandeSortieCaisse(models.Model):
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "state": "expression_besoin",
                 "regle_validation_id": False,
+                "budget_id": False,
+                "budget_mensuel_montant": 0.0,
+                "montant_mois_courant": 0.0,
+                "budget_mensuel_depasse": False,
                 "date_validation_n1": False,
                 "date_validation_tresorerie": False,
                 "date_validation_fi": False,
