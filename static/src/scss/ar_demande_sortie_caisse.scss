@@ -48,6 +48,7 @@
 
     .ar_sortie_caisse_sheet {
         position: relative;
+        max-height: calc(100vh - 150px);
         padding: 30px 34px 32px;
         border: 1px solid rgba(174, 190, 211, 0.72);
         border-radius: 8px;
@@ -56,7 +57,27 @@
         box-shadow:
             0 20px 48px rgba(23, 32, 51, 0.1),
             0 1px 0 rgba(255, 255, 255, 0.8) inset;
-        overflow: visible;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .ar_sortie_caisse_sheet::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .ar_sortie_caisse_sheet::-webkit-scrollbar-track {
+        background: rgba(231, 237, 244, 0.75);
+        border-radius: 999px;
+    }
+
+    .ar_sortie_caisse_sheet::-webkit-scrollbar-thumb {
+        background: rgba(15, 118, 110, 0.42);
+        border: 2px solid rgba(231, 237, 244, 0.75);
+        border-radius: 999px;
+    }
+
+    .ar_sortie_caisse_sheet::-webkit-scrollbar-thumb:hover {
+        background: rgba(15, 118, 110, 0.62);
     }
 
     .ar_sortie_caisse_sheet.ar_sc_ready {
@@ -456,6 +477,22 @@
     .ar_sortie_caisse_identity .o_inner_group {
         align-self: stretch;
         margin-top: 0;
+        width: 100%;
+    }
+
+    .ar_sortie_caisse_panel .o_inner_group,
+    .ar_sortie_caisse_panel .o_inner_group > tbody,
+    .ar_sortie_caisse_panel .o_inner_group > tbody > tr {
+        display: block;
+        width: 100%;
+    }
+
+    .ar_sortie_caisse_panel .o_inner_group > tbody > tr {
+        align-items: start;
+        display: grid;
+        gap: 10px 16px;
+        grid-template-columns: minmax(128px, 170px) minmax(0, 1fr);
+        margin-bottom: 12px;
     }
 
     .ar_sortie_caisse_main_row .ar_sortie_caisse_identity,
@@ -499,13 +536,36 @@
     }
 
     .ar_sortie_caisse_panel .o_inner_group > tbody > tr > td.o_td_label {
-        min-width: 150px;
+        min-width: 0;
+        width: auto !important;
         color: var(--ar-sc-muted);
         font-weight: 600;
+        white-space: normal;
+    }
+
+    .ar_sortie_caisse_panel .o_inner_group > tbody > tr > td:not(.o_td_label) {
+        min-width: 0;
+        width: auto !important;
     }
 
     .ar_sortie_caisse_panel .o_field_widget {
         color: var(--ar-sc-ink);
+        max-width: 100%;
+        min-width: 0;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .ar_sortie_caisse_panel .o_field_widget *,
+    .ar_sortie_caisse_panel .o_form_uri,
+    .ar_sortie_caisse_panel .o_field_many2one_selection {
+        max-width: 100%;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-break: break-word;
     }
 
     .ar_sortie_caisse_description {
@@ -908,14 +968,27 @@
     min-width: 112px;
 }
 
+@media (max-width: 1100px) {
+    .o_form_view.ar_sortie_caisse_form {
+        .ar_sortie_caisse_title {
+            grid-template-columns: 1fr;
+        }
+
+        .ar_sortie_caisse_main_row {
+            grid-template-columns: 1fr;
+        }
+
+        .ar_sortie_caisse_panel {
+            min-height: auto;
+        }
+    }
+}
+
 @media (max-width: 768px) {
     .o_form_view.ar_sortie_caisse_form {
         .ar_sortie_caisse_sheet {
+            max-height: calc(100vh - 118px);
             padding: 20px 16px;
-        }
-
-        .ar_sortie_caisse_title {
-            grid-template-columns: 1fr;
         }
 
         .ar_sortie_caisse_title h1 {
@@ -947,7 +1020,11 @@
             min-width: 0;
         }
 
-        .ar_sortie_caisse_main_row {
+        .ar_sortie_caisse_panel {
+            padding: 18px 16px;
+        }
+
+        .ar_sortie_caisse_panel .o_inner_group > tbody > tr {
             grid-template-columns: 1fr;
         }
     }

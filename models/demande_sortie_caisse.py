@@ -149,15 +149,14 @@ class ARDemandeSortieCaisse(models.Model):
         "ar.sortie.caisse.regle.validation",
         string="Règle de validation",
         readonly=True,
-        tracking=True,
     )
     tresorier_id = fields.Many2one("res.users", string="Trésorerie", readonly=True, tracking=True)
     validateur_fi_id = fields.Many2one("res.users", string="Validation FI", readonly=True, tracking=True)
     validateur_md_prevu_id = fields.Many2one("res.users", string="Validation MD prévue", readonly=True, tracking=True)
-    budget_id = fields.Many2one("ar.sortie.caisse.budget", string="Budget", readonly=True, tracking=True)
-    budget_mensuel_montant = fields.Float(string="Budget fixe", readonly=True, tracking=True)
-    montant_mois_courant = fields.Float(string="Total mensuel demandé", readonly=True, tracking=True)
-    budget_mensuel_depasse = fields.Boolean(string="Budget dépassé", readonly=True, tracking=True)
+    budget_id = fields.Many2one("ar.sortie.caisse.budget", string="Budget", readonly=True)
+    budget_mensuel_montant = fields.Float(string="Budget fixe", readonly=True)
+    montant_mois_courant = fields.Float(string="Total mensuel demandé", readonly=True)
+    budget_mensuel_depasse = fields.Boolean(string="Budget dépassé", readonly=True)
 
     date_validation_n1 = fields.Datetime(string="Date validation N+1", readonly=True, tracking=True)
     date_validation_tresorerie = fields.Datetime(string="Date validation Trésorerie", readonly=True, tracking=True)
@@ -573,13 +572,6 @@ class ARDemandeSortieCaisse(models.Model):
                 "state": "validation_n1",
                 **budget_values,
             })
-            if budget_values["budget_mensuel_depasse"]:
-                rec.message_post(body=_(
-                    "Budget mensuel dépassé : total mensuel demandé %s / budget %s. Validation complète requise."
-                ) % (
-                    rec._format_amount_dh(budget_values["montant_mois_courant"]),
-                    rec._format_amount_dh(budget_values["budget_mensuel_montant"]),
-                ))
             rec._send_notification_for_current_state()
 
     def _is_current_user_real_manager_n1(self):
