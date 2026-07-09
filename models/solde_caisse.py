@@ -18,13 +18,13 @@ class ARSortieCaisseSolde(models.Model):
         readonly=True,
     )
     alimentation_type = fields.Selection([
-        ("reste_regularisation", "Reste rendu apres regularisation"),
-        ("vente_dechets", "Vente dechets"),
-        ("banque", "Alimentation depuis banque"),
-        ("annulation_demande", "Annulation demande"),
+        ("reste_regularisation", "Reste rendu après régularisation"),
+        ("vente_dechets", "Vente déchets"),
+        ("banque", "Alimentation depuis la banque"),
+        ("annulation_demande", "Annulation de la demande"),
         ("autre", "Autre alimentation"),
     ], string="Type d'alimentation")
-    alimentation_montant = fields.Float(string="Montant a alimenter")
+    alimentation_montant = fields.Float(string="Montant à alimenter")
     alimentation_note = fields.Text(string="Note alimentation")
 
     @api.model
@@ -32,13 +32,13 @@ class ARSortieCaisseSolde(models.Model):
         if self.env.is_superuser():
             return
         if not self.env.user.has_group("ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie"):
-            raise AccessError(_("Seule la Tresorerie peut gerer le solde de caisse."))
+            raise AccessError(_("Seule la Trésorerie peut gérer le solde de caisse."))
 
     @api.model
     def _get_active_solde(self):
         solde = self.search([("active", "=", True)], limit=1)
         if not solde:
-            raise ValidationError(_("Veuillez creer un Solde de Caisse actif avant de valider une sortie de caisse."))
+            raise ValidationError(_("Veuillez créer un Solde de Caisse actif avant de valider une sortie de caisse."))
         return solde
 
     @api.constrains("active")
@@ -51,7 +51,7 @@ class ARSortieCaisseSolde(models.Model):
                 ("active", "=", True),
             ], limit=1)
             if active_solde:
-                raise ValidationError(_("Un seul solde de caisse actif est autorise."))
+                raise ValidationError(_("Un seul solde de caisse actif est autorisé."))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -74,7 +74,7 @@ class ARSortieCaisseSolde(models.Model):
     def write(self, vals):
         self._check_tresorerie_access()
         if "solde_courant" in vals and not self.env.context.get("skip_solde_caisse_write_check"):
-            raise AccessError(_("Le solde doit etre modifie par un mouvement de caisse."))
+            raise AccessError(_("Le solde doit être modifié par un mouvement de caisse."))
         return super().write(vals)
 
     def unlink(self):
@@ -87,7 +87,7 @@ class ARSortieCaisseSolde(models.Model):
         for rec in self:
             rec._check_tresorerie_access()
             if rec.alimentation_montant <= 0:
-                raise ValidationError(_("Le montant a alimenter doit etre superieur a zero."))
+                raise ValidationError(_("Le montant à alimenter doit être supérieur à zéro."))
             if not rec.alimentation_type:
                 raise ValidationError(_("Le type d'alimentation est obligatoire."))
             rec._create_mouvement(
@@ -106,7 +106,7 @@ class ARSortieCaisseSolde(models.Model):
     def _create_mouvement(self, mouvement_type, montant, alimentation_type=False, demande_id=False, note=False):
         self.ensure_one()
         if montant <= 0:
-            raise ValidationError(_("Le montant du mouvement doit etre superieur a zero."))
+            raise ValidationError(_("Le montant du mouvement doit être supérieur à zéro."))
         if mouvement_type == "augmentation" and not alimentation_type:
             raise ValidationError(_("Le type d'alimentation est obligatoire pour une augmentation."))
 
@@ -125,7 +125,7 @@ class ARSortieCaisseSolde(models.Model):
                         "Veuillez alimenter la caisse avant de continuer."
                     ),
                 )
-                raise ValidationError(_("Le solde de caisse est insuffisant pour cette operation."))
+                raise ValidationError(_("Le solde de caisse est insuffisant pour cette opération."))
         else:
             solde_apres = solde_avant + montant
 
@@ -143,12 +143,12 @@ class ARSortieCaisseSolde(models.Model):
         self.with_context(skip_solde_caisse_write_check=True).sudo().write({"solde_courant": solde_apres})
         if mouvement_type == "deduction" and solde_apres <= 0:
             self._notify_solde_caisse_alert(
-                _("Solde de caisse a zero"),
+                _("Solde de caisse à zéro"),
                 montant,
                 solde_apres,
                 demande_id=demande_id,
                 message=_(
-                    "Le solde de caisse est maintenant a zero. "
+                    "Le solde de caisse est maintenant à zéro. "
                     "Veuillez alimenter la caisse avant les prochaines sorties."
                 ),
             )
@@ -184,13 +184,13 @@ class ARSortieCaisseSolde(models.Model):
 
         demande_line = ""
         if demande:
-            demande_line = "<p><b>Demande liee :</b> %s</p>" % demande.name
+            demande_line = "<p><b>Demande liée :</b> %s</p>" % demande.name
         body = """
             <div>
                 <p>Bonjour,</p>
                 <p>%s</p>
                 %s
-                <p><b>Montant concerne :</b> %.2f</p>
+                <p><b>Montant concerné :</b> %.2f</p>
                 <p><b>Solde actuel :</b> %.2f</p>
             </div>
         """ % (message or subject, demande_line, montant, solde)
@@ -229,19 +229,19 @@ class ARSortieCaisseMouvement(models.Model):
     date_mouvement = fields.Datetime(string="Date", default=fields.Datetime.now, readonly=True)
     mouvement_type = fields.Selection([
         ("augmentation", "Augmentation"),
-        ("deduction", "Deduction"),
+        ("deduction", "Déduction"),
     ], string="Type de mouvement", required=True, readonly=True)
     alimentation_type = fields.Selection([
-        ("reste_regularisation", "Reste rendu apres regularisation"),
-        ("vente_dechets", "Vente dechets"),
-        ("banque", "Alimentation depuis banque"),
-        ("annulation_demande", "Annulation demande"),
+        ("reste_regularisation", "Reste rendu après régularisation"),
+        ("vente_dechets", "Vente déchets"),
+        ("banque", "Alimentation depuis la banque"),
+        ("annulation_demande", "Annulation de la demande"),
         ("autre", "Autre alimentation"),
     ], string="Type d'alimentation", readonly=True)
     montant = fields.Float(string="Montant", required=True, readonly=True)
     solde_avant = fields.Float(string="Solde avant", readonly=True)
-    solde_apres = fields.Float(string="Solde apres", readonly=True)
-    demande_id = fields.Many2one("ar.demande.sortie.caisse", string="Demande liee", readonly=True)
+    solde_apres = fields.Float(string="Solde après", readonly=True)
+    demande_id = fields.Many2one("ar.demande.sortie.caisse", string="Demande liée", readonly=True)
     user_id = fields.Many2one("res.users", string="Utilisateur", default=lambda self: self.env.user, readonly=True)
     note = fields.Text(string="Note", readonly=True)
 
@@ -255,11 +255,31 @@ class ARSortieCaisseMouvement(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.is_superuser() and not self.env.user.has_group("ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie"):
-            raise AccessError(_("Seule la Tresorerie peut creer des mouvements de caisse."))
+            raise AccessError(_("Seule la Trésorerie peut créer des mouvements de caisse."))
         return super().create(vals_list)
 
     def write(self, vals):
-        raise AccessError(_("Les mouvements de caisse ne peuvent pas etre modifies."))
+        if self.env.context.get("skip_caisse_mouvement_write_check"):
+            return super().write(vals)
+        raise AccessError(_("Les mouvements de caisse ne peuvent pas être modifiés."))
 
     def unlink(self):
-        raise AccessError(_("Les mouvements de caisse ne peuvent pas etre supprimes."))
+        raise AccessError(_("Les mouvements de caisse ne peuvent pas être supprimés."))
+
+    @api.model
+    def _fix_existing_accented_notes(self):
+        replacements = {
+            "apres regularisation": "après régularisation",
+            "suite a la modification": "suite à la modification",
+            "Solde de caisse a zero": "Solde de caisse à zéro",
+            "Demande liee": "Demande liée",
+            "Montant concerne": "Montant concerné",
+        }
+        movements = self.sudo().search([("note", "!=", False)])
+        for movement in movements:
+            note = movement.note or ""
+            fixed_note = note
+            for old, new in replacements.items():
+                fixed_note = fixed_note.replace(old, new)
+            if fixed_note != note:
+                movement.with_context(skip_caisse_mouvement_write_check=True).sudo().write({"note": fixed_note})

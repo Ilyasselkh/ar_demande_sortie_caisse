@@ -64,6 +64,18 @@
         </field>
     </record>
 
+    <record id="view_sortie_caisse_solde_search" model="ir.ui.view">
+        <field name="name">ar.sortie.caisse.solde.search</field>
+        <field name="model">ar.sortie.caisse.solde</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter string="Actifs" name="filter_active" domain="[('active','=',True)]"/>
+                <filter string="Archivés" name="filter_inactive" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
     <record id="view_sortie_caisse_mouvement_list" model="ir.ui.view">
         <field name="name">ar.sortie.caisse.mouvement.list</field>
         <field name="model">ar.sortie.caisse.mouvement</field>
@@ -93,14 +105,14 @@
                 <field name="demande_id"/>
                 <field name="mouvement_type"/>
                 <field name="alimentation_type"/>
-                <filter string="Periode personnalisée" name="filter_period" date="date_mouvement"/>
+                <filter string="Période personnalisée" name="filter_period" date="date_mouvement"/>
                 <filter string="Ce mois" name="filter_current_month"
                         domain="[('date_mouvement','&gt;=', context_today().strftime('%Y-%m-01'))]"/>
                 <filter string="Augmentations" name="filter_augmentation" domain="[('mouvement_type','=','augmentation')]"/>
-                <filter string="Deductions" name="filter_deduction" domain="[('mouvement_type','=','deduction')]"/>
+                <filter string="Déductions" name="filter_deduction" domain="[('mouvement_type','=','deduction')]"/>
                 <separator/>
                 <filter string="Reste rendu" name="filter_reste" domain="[('alimentation_type','=','reste_regularisation')]"/>
-                <filter string="Vente dechets" name="filter_dechets" domain="[('alimentation_type','=','vente_dechets')]"/>
+                <filter string="Vente déchets" name="filter_dechets" domain="[('alimentation_type','=','vente_dechets')]"/>
                 <filter string="Banque" name="filter_banque" domain="[('alimentation_type','=','banque')]"/>
                 <group>
                     <filter string="Type mouvement" name="group_mouvement_type" context="{'group_by': 'mouvement_type'}"/>
@@ -133,7 +145,8 @@
         <field name="name">Solde de Caisse</field>
         <field name="res_model">ar.sortie.caisse.solde</field>
         <field name="view_mode">list,form</field>
-        <field name="context">{'form_view_initial_mode': 'edit'}</field>
+        <field name="search_view_id" ref="view_sortie_caisse_solde_search"/>
+        <field name="context">{'form_view_initial_mode': 'edit', 'active_test': False}</field>
     </record>
 
     <record id="action_sortie_caisse_mouvements" model="ir.actions.act_window">

@@ -7,7 +7,7 @@ import { onMounted, onPatched } from "@odoo/owl";
 const PANEL_SELECTOR = ".o_search_panel";
 const PERIOD_CLASS = "ar_caisse_period_filter";
 const MODEL_NAME = "ar.sortie.caisse.mouvement";
-const FILTER_PREFIX = "Periode caisse";
+const FILTER_PREFIX = "Période caisse";
 
 function getSearchModel(component) {
     return component.env.searchModel || component.props.searchModel;
@@ -93,7 +93,7 @@ function renderPeriodPanel(component) {
     section.innerHTML = `
         <header class="o_search_panel_section_header ar_caisse_period_header">
             <i class="fa fa-calendar-o" aria-hidden="true"></i>
-            <span>Periode</span>
+            <span>Période</span>
         </header>
         <div class="ar_caisse_period_body">
             <label>

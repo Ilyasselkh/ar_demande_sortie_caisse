@@ -23,6 +23,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
     "data": [
         "data/sequence.xml",
         "data/mail_templates.xml",
+        "data/fix_existing_accents.xml",
         "security/security.xml",
         "security/record_rules.xml",
         "security/ir.model.access.csv",
