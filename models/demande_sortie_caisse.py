@@ -158,6 +158,19 @@ class ARDemandeSortieCaisse(models.Model):
     montant_mois_courant = fields.Float(string="Total mensuel demandé", readonly=True)
     budget_mensuel_depasse = fields.Boolean(string="Budget dépassé", readonly=True)
 
+    caisse_sortie_mouvement_id = fields.Many2one(
+        "ar.sortie.caisse.mouvement",
+        string="Mouvement sortie caisse",
+        readonly=True,
+        copy=False,
+    )
+    caisse_regularisation_mouvement_id = fields.Many2one(
+        "ar.sortie.caisse.mouvement",
+        string="Mouvement retour caisse",
+        readonly=True,
+        copy=False,
+    )
+
     date_validation_n1 = fields.Datetime(string="Date validation N+1", readonly=True, tracking=True)
     date_validation_tresorerie = fields.Datetime(string="Date validation Trésorerie", readonly=True, tracking=True)
     date_validation_fi = fields.Datetime(string="Date validation FI", readonly=True, tracking=True)
@@ -467,6 +480,8 @@ class ARDemandeSortieCaisse(models.Model):
             "budget_mensuel_montant",
             "montant_mois_courant",
             "budget_mensuel_depasse",
+            "caisse_sortie_mouvement_id",
+            "caisse_regularisation_mouvement_id",
             "date_validation_n1",
             "date_validation_tresorerie",
             "date_validation_fi",
@@ -602,6 +617,17 @@ class ARDemandeSortieCaisse(models.Model):
         for rec in self:
             if not rec.can_validate_tresorerie:
                 raise AccessError(_("Vous n'avez pas le droit de valider cette demande au niveau Trésorerie."))
+            if not rec.caisse_sortie_mouvement_id:
+                montant_sortie = rec.montant_donne or rec.montant_demande
+                mouvement = self.env["ar.sortie.caisse.solde"]._get_active_solde()._create_mouvement(
+                    "deduction",
+                    montant_sortie,
+                    demande_id=rec.id,
+                    note=_("Sortie de caisse pour la demande %s.") % rec.name,
+                )
+                rec.with_context(skip_sortie_caisse_access_check=True).write({
+                    "caisse_sortie_mouvement_id": mouvement.id,
+                })
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "date_validation_tresorerie": fields.Datetime.now(),
                 "validateur_tresorerie_id": self.env.user.id,
@@ -654,6 +680,17 @@ class ARDemandeSortieCaisse(models.Model):
         for rec in self:
             if not rec.can_regulariser:
                 raise AccessError(_("Vous n'avez pas le droit de régulariser cette demande."))
+            if rec.montant_a_rendre > 0 and not rec.caisse_regularisation_mouvement_id:
+                mouvement = self.env["ar.sortie.caisse.solde"]._get_active_solde()._create_mouvement(
+                    "augmentation",
+                    rec.montant_a_rendre,
+                    alimentation_type="reste_regularisation",
+                    demande_id=rec.id,
+                    note=_("Reste rendu apres regularisation de la demande %s.") % rec.name,
+                )
+                rec.with_context(skip_sortie_caisse_access_check=True).write({
+                    "caisse_regularisation_mouvement_id": mouvement.id,
+                })
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "state": "acceptee",
                 "date_regularisation": fields.Datetime.now(),
@@ -663,12 +700,25 @@ class ARDemandeSortieCaisse(models.Model):
             rec.message_post(body=_("Régularisation effectuée par %s. Demande archivée.") % self.env.user.display_name)
             rec._send_notification_for_current_state()
 
+    def _annuler_sortie_caisse(self, note):
+        for rec in self:
+            if not rec.caisse_sortie_mouvement_id:
+                continue
+            self.env["ar.sortie.caisse.solde"]._get_active_solde()._create_mouvement(
+                "augmentation",
+                rec.caisse_sortie_mouvement_id.montant,
+                alimentation_type="annulation_demande",
+                demande_id=rec.id,
+                note=note % rec.name,
+            )
+
     def action_refuser(self):
         for rec in self:
             if not rec.can_refuse:
                 raise AccessError(_("Vous n'avez pas le droit de refuser cette demande."))
             if not rec.motif_refus:
                 raise ValidationError(_("Le champ Motif de refus est obligatoire avant de refuser la demande."))
+            rec._annuler_sortie_caisse(_("Annulation de la sortie de caisse suite au refus de la demande %s."))
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "state": "refusee",
                 "date_refus": fields.Datetime.now(),
@@ -680,6 +730,8 @@ class ARDemandeSortieCaisse(models.Model):
         for rec in self:
             if not rec.can_modify:
                 raise AccessError(_("Vous n'avez pas le droit de modifier cette demande."))
+            if rec.caisse_sortie_mouvement_id and rec.state in ("saisie", "regularisation"):
+                rec._annuler_sortie_caisse(_("Annulation de la sortie de caisse suite a la modification de la demande %s."))
             rec.with_context(skip_sortie_caisse_access_check=True).write({
                 "state": "expression_besoin",
                 "regle_validation_id": False,
@@ -704,6 +756,8 @@ class ARDemandeSortieCaisse(models.Model):
                 "motif_refus": False,
                 "montant_donne": 0.0,
                 "montant_depense": 0.0,
+                "caisse_sortie_mouvement_id": False,
+                "caisse_regularisation_mouvement_id": False,
                 "justificatif_saisie_ids": [(5, 0, 0)],
             })
             rec.sudo().message_post(body=_("La demande a été remise à l’état Expression de besoin."))

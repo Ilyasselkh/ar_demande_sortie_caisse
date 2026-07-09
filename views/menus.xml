@@ -11,6 +11,20 @@
               action="action_sortie_caisse_demandes"
               sequence="10"/>
 
+    <menuitem id="menu_sortie_caisse_solde"
+              name="Solde de Caisse"
+              parent="menu_sortie_caisse_root"
+              action="action_sortie_caisse_solde"
+              sequence="15"
+              groups="ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie,ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_fi"/>
+
+    <menuitem id="menu_sortie_caisse_mouvements"
+              name="Historique de Caisse"
+              parent="menu_sortie_caisse_root"
+              action="action_sortie_caisse_mouvements"
+              sequence="16"
+              groups="ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie,ar_demande_sortie_caisse.group_demande_sortie_caisse_validateur_fi"/>
+
     <menuitem id="menu_sortie_caisse_archives"
               name="Archives"
               parent="menu_sortie_caisse_root"

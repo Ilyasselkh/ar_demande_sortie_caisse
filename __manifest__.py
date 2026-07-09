@@ -27,6 +27,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "security/record_rules.xml",
         "security/ir.model.access.csv",
         "reports/demande_sortie_caisse_report.xml",
+        "views/solde_caisse_views.xml",
         "views/demande_sortie_caisse_views.xml",
         "views/regle_validation_views.xml",
         "views/budget_views.xml",
@@ -37,6 +38,7 @@ Module de gestion des demandes de sortie de caisse avec workflow :
         "web.assets_backend": [
             "ar_demande_sortie_caisse/static/src/scss/ar_demande_sortie_caisse.scss",
             "ar_demande_sortie_caisse/static/src/js/sortie_caisse_animations.js",
+            "ar_demande_sortie_caisse/static/src/js/caisse_search_panel_period.js",
         ],
     },
     "application": True,
