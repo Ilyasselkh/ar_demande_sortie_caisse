@@ -11,6 +11,7 @@ class ARSortieCaisseSolde(models.Model):
     name = fields.Char(string="Nom", required=True, default="Caisse principale", tracking=True)
     solde_courant = fields.Float(string="Solde de caisse", tracking=True)
     active = fields.Boolean(default=True, tracking=True)
+    can_manage_active = fields.Boolean(compute="_compute_can_manage_active")
     mouvement_ids = fields.One2many(
         "ar.sortie.caisse.mouvement",
         "solde_id",
@@ -18,7 +19,7 @@ class ARSortieCaisseSolde(models.Model):
         readonly=True,
     )
     alimentation_type = fields.Selection([
-        ("reste_regularisation", "Reste rendu après régularisation"),
+        ("reste_regularisation", "Rendu après régularisation"),
         ("vente_dechets", "Vente déchets"),
         ("banque", "Alimentation depuis la banque"),
         ("annulation_demande", "Annulation de la demande"),
@@ -27,9 +28,16 @@ class ARSortieCaisseSolde(models.Model):
     alimentation_montant = fields.Float(string="Montant à alimenter")
     alimentation_note = fields.Text(string="Note alimentation")
 
+    def _compute_can_manage_active(self):
+        can_manage = self.env.is_superuser() or self.env.user.has_group("base.group_system")
+        for rec in self:
+            rec.can_manage_active = can_manage
+
     @api.model
     def _check_tresorerie_access(self):
         if self.env.is_superuser():
+            return
+        if self.env.user.has_group("base.group_system"):
             return
         if not self.env.user.has_group("ar_demande_sortie_caisse.group_demande_sortie_caisse_tresorerie"):
             raise AccessError(_("Seule la Trésorerie peut gérer le solde de caisse."))
@@ -73,6 +81,8 @@ class ARSortieCaisseSolde(models.Model):
 
     def write(self, vals):
         self._check_tresorerie_access()
+        if "active" in vals and not self.env.is_superuser() and not self.env.user.has_group("base.group_system"):
+            raise AccessError(_("Seul un administrateur peut modifier le champ Active."))
         if "solde_courant" in vals and not self.env.context.get("skip_solde_caisse_write_check"):
             raise AccessError(_("Le solde doit être modifié par un mouvement de caisse."))
         return super().write(vals)
@@ -232,7 +242,7 @@ class ARSortieCaisseMouvement(models.Model):
         ("deduction", "Déduction"),
     ], string="Type de mouvement", required=True, readonly=True)
     alimentation_type = fields.Selection([
-        ("reste_regularisation", "Reste rendu après régularisation"),
+        ("reste_regularisation", "Rendu après régularisation"),
         ("vente_dechets", "Vente déchets"),
         ("banque", "Alimentation depuis la banque"),
         ("annulation_demande", "Annulation de la demande"),
@@ -270,6 +280,7 @@ class ARSortieCaisseMouvement(models.Model):
     def _fix_existing_accented_notes(self):
         replacements = {
             "apres regularisation": "après régularisation",
+            "Reste rendu après régularisation": "Rendu après régularisation",
             "suite a la modification": "suite à la modification",
             "Solde de caisse a zero": "Solde de caisse à zéro",
             "Demande liee": "Demande liée",

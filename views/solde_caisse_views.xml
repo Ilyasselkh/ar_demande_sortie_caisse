@@ -5,9 +5,10 @@
         <field name="model">ar.sortie.caisse.solde</field>
         <field name="arch" type="xml">
             <list>
+                <field name="can_manage_active" column_invisible="1"/>
                 <field name="name"/>
                 <field name="solde_courant"/>
-                <field name="active" widget="boolean_toggle"/>
+                <field name="active" widget="boolean_toggle" readonly="not can_manage_active"/>
             </list>
         </field>
     </record>
@@ -24,6 +25,7 @@
                             class="btn-primary"/>
                 </header>
                 <sheet>
+                    <field name="can_manage_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="name"/>
                         <h1>
@@ -33,7 +35,7 @@
                     <group>
                         <group string="Solde">
                             <field name="solde_courant" readonly="id"/>
-                            <field name="active"/>
+                            <field name="active" readonly="not can_manage_active"/>
                         </group>
                         <group string="Alimentation">
                             <field name="alimentation_type" required="alimentation_montant &gt; 0"/>
@@ -111,7 +113,7 @@
                 <filter string="Augmentations" name="filter_augmentation" domain="[('mouvement_type','=','augmentation')]"/>
                 <filter string="Déductions" name="filter_deduction" domain="[('mouvement_type','=','deduction')]"/>
                 <separator/>
-                <filter string="Reste rendu" name="filter_reste" domain="[('alimentation_type','=','reste_regularisation')]"/>
+                <filter string="Rendu régularisation" name="filter_reste" domain="[('alimentation_type','=','reste_regularisation')]"/>
                 <filter string="Vente déchets" name="filter_dechets" domain="[('alimentation_type','=','vente_dechets')]"/>
                 <filter string="Banque" name="filter_banque" domain="[('alimentation_type','=','banque')]"/>
                 <group>

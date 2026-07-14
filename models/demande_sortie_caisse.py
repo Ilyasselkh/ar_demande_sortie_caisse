@@ -686,7 +686,7 @@ class ARDemandeSortieCaisse(models.Model):
                     rec.montant_a_rendre,
                     alimentation_type="reste_regularisation",
                     demande_id=rec.id,
-                    note=_("Reste rendu après régularisation de la demande %s.") % rec.name,
+                    note=_("Rendu après régularisation de la demande %s.") % rec.name,
                 )
                 rec.with_context(skip_sortie_caisse_access_check=True).write({
                     "caisse_regularisation_mouvement_id": mouvement.id,
