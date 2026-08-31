@@ -1,3 +1,4 @@
+
 /** @odoo-module **/
 
 const FORM_SELECTOR = ".o_form_view.ar_sortie_caisse_form";
